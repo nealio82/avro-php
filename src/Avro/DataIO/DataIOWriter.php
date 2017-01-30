@@ -3,7 +3,9 @@
 namespace Avro\DataIO;
 
 use Avro\Datum\IOBinaryEncoder;
+use Avro\Datum\IODatumReader;
 use Avro\Datum\IODatumWriter;
+use Avro\Exception\DataIoException;
 use Avro\IO\IO;
 use Avro\IO\StringIO;
 use Avro\Schema\Schema;
@@ -51,7 +53,7 @@ class DataIOWriter
     /**
      * @var IOBinaryEncoder encoder for buffer
      */
-    private $buffer_encoder; // AvroIOBinaryEncoder
+    private $buffer_encoder; // IOBinaryEncoder
 
     /**
      * @var int count of items written to block
@@ -70,8 +72,9 @@ class DataIOWriter
      */
     public function __construct(IO $io, IODatumWriter $datum_writer, Schema $writers_schema = null)
     {
-        if (!($io instanceof IO))
-            throw new AvroDataIOException('io must be instance of AvroIO');
+        if (!($io instanceof IO)) {
+            throw new DataIOException('io must be instance of IO');
+        }
 
         $this->io = $io;
         $this->encoder = new IOBinaryEncoder($this->io);
@@ -87,7 +90,7 @@ class DataIOWriter
             $this->metadata[DataIO::METADATA_SCHEMA_ATTR] = strval($writers_schema);
             $this->write_header();
         } else {
-            $dataIOReader = new DataIOReader($this->io, new AvroIODatumReader());
+            $dataIOReader = new DataIOReader($this->io, new IODatumReader());
             $this->sync_marker = $dataIOReader->getSyncMarker();
             $this->metadata[DataIO::METADATA_CODEC_ATTR] = $dataIOReader->getMetaDataFor(DataIO::METADATA_CODEC_ATTR);
 
@@ -111,7 +114,7 @@ class DataIOWriter
     }
 
     /**
-     * Flushes buffer to AvroIO object container and closes it.
+     * Flushes buffer to IO object container and closes it.
      * @return mixed value of $io->close()
      * @see IO::close()
      */
@@ -122,7 +125,7 @@ class DataIOWriter
     }
 
     /**
-     * Flushes biffer to AvroIO object container.
+     * Flushes buffer to IO object container.
      * @returns mixed value of $io->flush()
      * @see IO::flush()
      */
@@ -133,8 +136,8 @@ class DataIOWriter
     }
 
     /**
-     * Writes a block of data to the AvroIO object container.
-     * @throws AvroDataIOException if the codec provided by the encoder
+     * Writes a block of data to the IO object container.
+     * @throws DataIOException if the codec provided by the encoder
      *         is not supported
      * @internal Should the codec check happen in the constructor?
      *           Why wait until we're writing data?
@@ -151,7 +154,7 @@ class DataIOWriter
             )
                 $this->write($to_write);
             else
-                throw new AvroDataIOException(
+                throw new DataIOException(
                     sprintf('codec %s is not supported',
                         $this->metadata[DataIO::METADATA_CODEC_ATTR]));
 
@@ -162,7 +165,7 @@ class DataIOWriter
     }
 
     /**
-     * Writes the header of the AvroIO object container
+     * Writes the header of the IO object container
      */
     private function write_header()
     {

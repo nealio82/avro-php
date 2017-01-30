@@ -5,7 +5,7 @@ namespace Avro\Schema;
 use Avro\Exception\SchemaParseException;
 
 /**
- * AvroNamedSchema with fixed-length data values
+ * NamedSchema with fixed-length data values
  * @package Avro
  */
 class FixedSchema extends NamedSchema
@@ -25,9 +25,10 @@ class FixedSchema extends NamedSchema
     public function __construct(Name $name, $doc, $size, NamedSchemata &$schemata = null)
     {
         $doc = null; // Fixed schemas don't have doc strings.
-        if (!is_integer($size))
+        if (!is_integer($size)) {
             throw new SchemaParseException(
                 'Fixed Schema requires a valid integer for "size" attribute');
+        }
         parent::__construct(Schema::FIXED_SCHEMA, $name, $doc, $schemata);
         return $this->size = $size;
     }

@@ -4,6 +4,7 @@ namespace Avro\DataIO;
 
 use Avro\Datum\IODatumReader;
 use Avro\Datum\IODatumWriter;
+use Avro\Exception\DataIoException;
 use Avro\IO\File;
 use Avro\IO\IO;
 use Avro\Schema\Schema;
@@ -65,13 +66,19 @@ class DataIO
     /**
      * @returns the initial "magic" segment of an Avro container file header.
      */
-    public static function magic() { return ('Obj' . pack('c', self::VERSION)); }
+    public static function magic()
+    {
+        return ('Obj' . pack('c', self::VERSION));
+    }
 
     /**
      * @returns int count of bytes in the initial "magic" segment of the
      *              Avro container file header
      */
-    public static function magic_size() { return strlen(self::magic()); }
+    public static function magic_size()
+    {
+        return strlen(self::magic());
+    }
 
 
     /**
@@ -79,32 +86,33 @@ class DataIO
      */
     public static function metadata_schema()
     {
-        if (is_null(self::$metadata_schema))
+        if (is_null(self::$metadata_schema)) {
             self::$metadata_schema = Schema::parse(self::METADATA_SCHEMA_JSON);
+        }
         return self::$metadata_schema;
     }
 
     /**
      * @param string $file_path file_path of file to open
-     * @param string $mode one of AvroFile::READ_MODE or AvroFile::WRITE_MODE
+     * @param string $mode one of File::READ_MODE or File::WRITE_MODE
      * @param string $schema_json JSON of writer's schema
-     * @returns DataIOWriter instance of AvroDataIOWriter
+     * @returns DataIOWriter instance of DataIOWriter
      *
-     * @throws AvroDataIOException if $writers_schema is not provided
+     * @throws DataIOException if $writers_schema is not provided
      *         or if an invalid $mode is given.
      */
-    public static function open_file($file_path, $mode=File::READ_MODE,
-                                     $schema_json=null)
+    public static function open_file($file_path, $mode = File::READ_MODE,
+                                     $schema_json = null)
     {
         $schema = !is_null($schema_json)
             ? Schema::parse($schema_json) : null;
 
         $io = false;
-        switch ($mode)
-        {
+        switch ($mode) {
             case File::WRITE_MODE:
-                if (is_null($schema))
-                    throw new AvroDataIOException('Writing an Avro file requires a schema.');
+                if (is_null($schema)) {
+                    throw new DataIOException('Writing an Avro file requires a schema.');
+                }
                 $file = new File($file_path, File::WRITE_MODE);
                 $io = self::open_writer($file, $schema);
                 break;
@@ -113,7 +121,7 @@ class DataIO
                 $io = self::open_reader($file, $schema);
                 break;
             default:
-                throw new AvroDataIOException(
+                throw new DataIOException(
                     sprintf("Only modes '%s' and '%s' allowed. You gave '%s'.",
                         File::READ_MODE, File::WRITE_MODE, $mode));
         }

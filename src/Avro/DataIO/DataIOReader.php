@@ -11,7 +11,7 @@ use Avro\Util\Util;
 
 /**
  *
- * Reads Avro data from an AvroIO source using an AvroSchema.
+ * Reads Avro data from an IO source using an AvroSchema.
  * @package Avro
  */
 class DataIOReader
@@ -50,14 +50,15 @@ class DataIOReader
      * @param IO $io source from which to read
      * @param IODatumReader $datum_reader reader that understands
      *                                        the data schema
-     * @throws DataIoException if $io is not an instance of AvroIO
+     * @throws DataIoException if $io is not an instance of IO
      * @uses read_header()
      */
     public function __construct(IO $io, IODatumReader $datum_reader)
     {
 
-        if (!($io instanceof IO))
-            throw new DataIoException('io must be instance of AvroIO');
+        if (!($io instanceof IO)) {
+            throw new DataIoException('io must be instance of IO');
+        }
 
         $this->io = $io;
         $this->decoder = new IOBinaryDecoder($this->io);
@@ -66,8 +67,9 @@ class DataIOReader
 
         $codec = Util::array_value($this->metadata,
             DataIO::METADATA_CODEC_ATTR);
-        if ($codec && !DataIO::is_valid_codec($codec))
+        if ($codec && !DataIO::is_valid_codec($codec)) {
             throw new DataIoException(sprintf('Uknown codec: %s', $codec));
+        }
 
         $this->block_count = 0;
         // FIXME: Seems unsanitary to set writers_schema here.
@@ -90,11 +92,12 @@ class DataIOReader
             throw new DataIoException(
                 'Not an Avro data file: shorter than the Avro magic block');
 
-        if (DataIO::magic() != $magic)
+        if (DataIO::magic() != $magic) {
 
             throw new DataIoException(
                 sprintf('Not an Avro data file: %s does not match %s',
                     $magic, DataIO::magic()));
+        }
 
         $this->metadata = $this->datum_reader->read_data(DataIO::metadata_schema(),
             DataIO::metadata_schema(),
@@ -129,7 +132,7 @@ class DataIOReader
     }
 
     /**
-     * Closes this writer (and its AvroIO object.)
+     * Closes this writer (and its IO object.)
      * @uses IO::close()
      */
     public function close()

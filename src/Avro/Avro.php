@@ -2,6 +2,9 @@
 
 namespace Avro;
 
+use Avro\Debug\Debug;
+use Avro\Exception\Exception;
+
 class Avro
 {
     /**
@@ -56,7 +59,7 @@ class Avro
     /**
      * Determines if the host platform can encode and decode long integer data.
      *
-     * @throws AvroException if the platform cannot handle long integers.
+     * @throws Exception if the platform cannot handle long integers.
      */
     private static function check_64_bit()
     {
@@ -64,7 +67,7 @@ class Avro
             if (extension_loaded('gmp'))
                 self::$biginteger_mode = self::GMP_BIGINTEGER_MODE;
             else
-                throw new AvroException('This platform cannot handle a 64-bit operations. '
+                throw new Exception('This platform cannot handle a 64-bit operations. '
                     . 'Please install the GMP PHP extension.');
         else
             self::$biginteger_mode = self::PHP_BIGINTEGER_MODE;
@@ -85,12 +88,12 @@ class Avro
      * Determines if the host platform is little endian,
      * required for processing double and float data.
      *
-     * @throws AvroException if the platform is not little endian.
+     * @throws Exception if the platform is not little endian.
      */
     private static function check_little_endian()
     {
         if (!self::is_little_endian_platform())
-            throw new AvroException('This is not a little-endian platform');
+            throw new Exception('This is not a little-endian platform');
     }
 
     /**
@@ -99,7 +102,7 @@ class Avro
      *
      * Based on a similar check perfomed in http://pear.php.net/package/Math_BinaryUtils
      *
-     * @throws AvroException if the endianness cannot be determined.
+     * @throws Exception if the endianness cannot be determined.
      */
     private static function set_endianness()
     {
@@ -112,9 +115,9 @@ class Avro
                 self::$endianness = self::LITTLE_ENDIAN;
                 break;
             default:
-                throw new AvroException(
+                throw new Exception(
                     sprintf('Error determining platform endianness: %s',
-                        AvroDebug::hex_string($packed)));
+                        Debug::hex_string($packed)));
         }
     }
 

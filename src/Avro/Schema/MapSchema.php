@@ -10,7 +10,7 @@ namespace Avro\Schema;
 class MapSchema extends Schema
 {
     /**
-     * @var string|Schema named schema name or AvroSchema
+     * @var string|Schema named schema name or Schema
      *      of map schema values.
      */
     private $values;

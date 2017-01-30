@@ -5,7 +5,7 @@ namespace Avro\Schema;
 use Avro\Exception\SchemaParseException;
 
 /**
- * Field of an {@link AvroRecordSchema}
+ * Field of an {@link RecordSchema}
  * @package Avro
  */
 class Field extends Schema
@@ -91,8 +91,8 @@ class Field extends Schema
     private $order;
 
     /**
-     * @var boolean whether or not the AvroNamedSchema of this field is
-     *              defined in the AvroNamedSchemata instance
+     * @var boolean whether or not the NamedSchema of this field is
+     *              defined in the NamedSchemata instance
      */
     private $is_type_from_schemata;
 

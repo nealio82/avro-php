@@ -9,9 +9,11 @@ namespace Avro\Exception;
  */
 class IOTypeException extends Exception
 {
+
     /**
-     * @param AvroSchema $expected_schema
-     * @param mixed $datum
+     * IOTypeException constructor.
+     * @param string $expected_schema
+     * @param int $datum
      */
     public function __construct($expected_schema, $datum)
     {

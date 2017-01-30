@@ -24,7 +24,7 @@ class ProtocolMessage
         if (array_key_exists('response', $avro)) {
             $this->response = $protocol->schemata->schema_by_name(new Name($avro{'response'}, $protocol->namespace, $protocol->namespace));
             if ($this->response == null)
-                $this->response = new AvroPrimitiveSchema($avro{'response'});
+                $this->response = new PrimitiveSchema($avro{'response'});
         }
     }
 }

@@ -2,6 +2,8 @@
 
 namespace Avro\Schema;
 
+use Avro\Exception\SchemaParseException;
+
 /**
  * @package Avro
  */
@@ -43,14 +45,14 @@ class Name
     /**
      * @param string $namespace
      * @returns boolean true if namespace is composed of valid names
-     * @throws AvroSchemaParseException if any of the namespace components
+     * @throws SchemaParseException if any of the namespace components
      *                                  are invalid.
      */
     private static function check_namespace_names($namespace)
     {
         foreach (explode(self::NAME_SEPARATOR, $namespace) as $n) {
             if (empty($n) || (0 == preg_match(self::NAME_REGEXP, $n)))
-                throw new AvroSchemaParseException(sprintf('Invalid name "%s"', $n));
+                throw new SchemaParseException(sprintf('Invalid name "%s"', $n));
         }
         return true;
     }
@@ -59,12 +61,12 @@ class Name
      * @param string $name
      * @param string $namespace
      * @returns string
-     * @throws AvroSchemaParseException if any of the names are not valid.
+     * @throws SchemaParseException if any of the names are not valid.
      */
     private static function parse_fullname($name, $namespace)
     {
         if (!is_string($namespace) || empty($namespace))
-            throw new AvroSchemaParseException('Namespace must be a non-empty string.');
+            throw new SchemaParseException('Namespace must be a non-empty string.');
         self::check_namespace_names($namespace);
         return $namespace . '.' . $name;
     }
@@ -96,21 +98,23 @@ class Name
      */
     public function __construct($name, $namespace, $default_namespace)
     {
-        if (!is_string($name) || empty($name))
-            throw new AvroSchemaParseException('Name must be a non-empty string.');
+        if (!is_string($name) || empty($name)) {
+            throw new SchemaParseException('Name must be a non-empty string.');
+        }
 
         if (strpos($name, self::NAME_SEPARATOR)
             && self::check_namespace_names($name)
-        )
+        ) {
             $this->fullname = $name;
-        elseif (0 == preg_match(self::NAME_REGEXP, $name))
-            throw new AvroSchemaParseException(sprintf('Invalid name "%s"', $name));
-        elseif (!is_null($namespace))
+        } elseif (0 == preg_match(self::NAME_REGEXP, $name)) {
+            throw new SchemaParseException(sprintf('Invalid name "%s"', $name));
+        } elseif (!is_null($namespace)) {
             $this->fullname = self::parse_fullname($name, $namespace);
-        elseif (!is_null($default_namespace))
+        } elseif (!is_null($default_namespace)) {
             $this->fullname = self::parse_fullname($name, $default_namespace);
-        else
+        } else {
             $this->fullname = $name;
+        }
 
         list($this->name, $this->namespace) = self::extract_namespace($this->fullname);
         $this->qualified_name = (is_null($this->namespace)

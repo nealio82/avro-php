@@ -4,6 +4,7 @@ namespace Avro\Protocol;
 
 use Avro\Exception\ProtocolParseException;
 use Avro\Schema\NamedSchemata;
+use Avro\Schema\Schema;
 
 /**
  * Avro library for protocols
@@ -33,7 +34,7 @@ class Protocol
         $this->name = $avro["protocol"];
 
         if (!is_null($avro["types"])) {
-            $types = AvroSchema::real_parse($avro["types"], $this->namespace, $this->schemata);
+            $types = Schema::real_parse($avro["types"], $this->namespace, $this->schemata);
         }
 
         if (!is_null($avro["messages"])) {
