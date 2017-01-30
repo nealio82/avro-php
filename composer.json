@@ -1,0 +1,8 @@
+{
+  "name": "nealio82/avro-php",
+  "autoload": {
+    "psr-4" : {
+      "Avro\\": "src/Avro"
+    }
+  }
+}
