@@ -404,7 +404,7 @@ class Schema
 
     /**
      * @internal Should only be called from within the constructor of
-     *           a class which extends AvroSchema
+     *           a class which extends Schema
      * @param string $type a schema type name
      */
     public function __construct($type)

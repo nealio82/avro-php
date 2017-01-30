@@ -56,14 +56,14 @@ class RecordSchema extends NamedSchema
     }
 
     /**
-     * @var Schema[] array of AvroNamedSchema field definitions of
-     *                   this AvroRecordSchema
+     * @var Schema[] array of NamedSchema field definitions of
+     *                   this RecordSchema
      */
     private $fields;
 
     /**
      * @var array map of field names to field objects.
-     * @internal Not called directly. Memoization of AvroRecordSchema->fields_hash()
+     * @internal Not called directly. Memoization of RecordSchema->fields_hash()
      */
     private $fields_hash;
 
@@ -79,14 +79,16 @@ class RecordSchema extends NamedSchema
     public function __construct($name, $doc, $fields, NamedSchemata &$schemata = null,
                                 $schema_type = Schema::RECORD_SCHEMA)
     {
-        if (is_null($fields))
+        if (is_null($fields)) {
             throw new SchemaParseException(
                 'Record schema requires a non-empty fields attribute');
+        }
 
-        if (Schema::REQUEST_SCHEMA == $schema_type)
+        if (Schema::REQUEST_SCHEMA == $schema_type) {
             parent::__construct($schema_type, $name);
-        else
+        } else {
             parent::__construct($schema_type, $name, $doc, $schemata);
+        }
 
         list($x, $namespace) = $name->name_and_namespace();
         $this->fields = self::parse_fields($fields, $namespace, $schemata);
@@ -112,7 +114,7 @@ class RecordSchema extends NamedSchema
     }
 
     /**
-     * @returns array the schema definitions of the fields of this AvroRecordSchema
+     * @returns array the schema definitions of the fields of this RecordSchema
      */
     public function fields()
     {
@@ -120,7 +122,7 @@ class RecordSchema extends NamedSchema
     }
 
     /**
-     * @returns array a hash table of the fields of this AvroRecordSchema fields
+     * @returns array a hash table of the fields of this RecordSchema fields
      *          keyed by each field's name
      */
     public function fields_hash()

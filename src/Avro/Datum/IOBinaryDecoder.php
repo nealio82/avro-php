@@ -7,7 +7,7 @@ use Avro\GMP\GMP;
 use Avro\IO\IO;
 
 /**
- * Decodes and reads Avro data from an AvroIO object encoded using
+ * Decodes and reads Avro data from an IO object encoded using
  * Avro binary encoding.
  *
  * @package Avro
@@ -37,7 +37,7 @@ class IOBinaryDecoder
      * Performs decoding of the binary string to a float value.
      *
      * XXX: This is <b>not</b> endian-aware! See comments in
-     * {@link AvroIOBinaryEncoder::float_to_int_bits()} for details.
+     * {@link IOBinaryEncoder::float_to_int_bits()} for details.
      *
      * @param string $bits
      * @returns float
@@ -52,7 +52,7 @@ class IOBinaryDecoder
      * Performs decoding of the binary string to a double value.
      *
      * XXX: This is <b>not</b> endian-aware! See comments in
-     * {@link AvroIOBinaryEncoder::float_to_int_bits()} for details.
+     * {@link IOBinaryEncoder::float_to_int_bits()} for details.
      *
      * @param string $bits
      * @returns float
@@ -79,7 +79,7 @@ class IOBinaryDecoder
 
     /**
      * @returns string the next byte from $this->io.
-     * @throws AvroException if the next byte cannot be read.
+     * @throws Exception if the next byte cannot be read.
      */
     private function next_byte()
     {
@@ -225,7 +225,7 @@ class IOBinaryDecoder
     }
 
     /**
-     * @returns int position of pointer in AvroIO instance
+     * @returns int position of pointer in IO instance
      * @uses IO::tell()
      */
     private function tell()

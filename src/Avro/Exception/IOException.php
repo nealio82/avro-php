@@ -3,7 +3,7 @@
 namespace Avro\Exception;
 
 /**
- * Exceptions associated with AvroIO instances.
+ * Exceptions associated with IO instances.
  * @package Avro
  */
 class IOException extends Exception

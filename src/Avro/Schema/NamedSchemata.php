@@ -5,7 +5,7 @@ namespace Avro\Schema;
 use Avro\Exception\SchemaParseException;
 
 /**
- *  Keeps track of AvroNamedSchema which have been observed so far,
+ *  Keeps track of NamedSchema which have been observed so far,
  *  as well as the default namespace.
  *
  * @package Avro
@@ -18,7 +18,7 @@ class NamedSchemata
     private $schemata;
 
     /**
-     * @param AvroNamedSchemata []
+     * @param NamedSchemata []
      */
     public function __construct($schemata = array())
     {
@@ -64,20 +64,21 @@ class NamedSchemata
     }
 
     /**
-     * Creates a new AvroNamedSchemata instance of this schemata instance
+     * Creates a new NamedSchemata instance of this schemata instance
      * with the given $schema appended.
-     * @param AvroNamedSchema schema to add to this existing schemata
+     * @param NamedSchema schema to add to this existing schemata
      * @returns NamedSchemata
      */
     public function clone_with_new_schema(NamedSchema $schema)
     {
         $name = $schema->fullname();
-        if (Schema::is_valid_type($name))
+        if (Schema::is_valid_type($name)) {
             throw new SchemaParseException(
                 sprintf('Name "%s" is a reserved type name', $name));
-        else if ($this->has_name($name))
+        } else if ($this->has_name($name)) {
             throw new SchemaParseException(
                 sprintf('Name "%s" is already in use', $name));
+        }
         $schemata = new NamedSchemata($this->schemata);
         $schemata->schemata[$name] = $schema;
         return $schemata;

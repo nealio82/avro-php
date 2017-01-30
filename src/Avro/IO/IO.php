@@ -36,7 +36,7 @@ class IO
     const SEEK_END = SEEK_END;
 
     /**
-     * Read $len bytes from AvroIO instance
+     * Read $len bytes from IO instance
      * @var int $len
      * @return string bytes read
      */
@@ -49,7 +49,7 @@ class IO
      * Append bytes to this buffer. (Nothing more is needed to support Avro.)
      * @param str $arg bytes to write
      * @returns int count of bytes written.
-     * @throws AvroIOException if $args is not a string value.
+     * @throws IOException if $args is not a string value.
      */
     public function write($arg)
     {
@@ -57,7 +57,7 @@ class IO
     }
 
     /**
-     * Return byte offset within AvroIO instance
+     * Return byte offset within IO instance
      * @return int
      */
     public function tell()
@@ -75,7 +75,7 @@ class IO
      *                    or Avro::SEEK_END
      * @returns boolean true
      *
-     * @throws AvroIOException
+     * @throws IOException
      */
     public function seek($offset, $whence=self::SEEK_SET)
     {
@@ -83,7 +83,7 @@ class IO
     }
 
     /**
-     * Flushes any buffered data to the AvroIO object.
+     * Flushes any buffered data to the IO object.
      * @returns boolean true upon success.
      */
     public function flush()
@@ -92,7 +92,7 @@ class IO
     }
 
     /**
-     * Returns whether or not the current position at the end of this AvroIO
+     * Returns whether or not the current position at the end of this IO
      * instance.
      *
      * Note is_eof() is <b>not</b> like eof in C or feof in PHP:
@@ -106,7 +106,7 @@ class IO
     }
 
     /**
-     * Closes this AvroIO instance.
+     * Closes this IO instance.
      */
     public function close()
     {

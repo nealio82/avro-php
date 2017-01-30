@@ -5,7 +5,7 @@ namespace Avro\IO;
 use Avro\Exception\IOException;
 
 /**
- * AvroIO wrapper for PHP file access functions
+ * IO wrapper for PHP file access functions
  * @package Avro
  */
 class File extends IO
@@ -26,7 +26,7 @@ class File extends IO
     private $file_path;
 
     /**
-     * @var resource file handle for AvroFile instance
+     * @var resource file handle for File instance
      */
     private $file_handle;
 
@@ -89,13 +89,14 @@ class File extends IO
 
     /**
      * @returns int current position within the file
-     * @throws AvroFileExcpetion if tell failed.
+     * @throws FileExcpetion if tell failed.
      */
     public function tell()
     {
         $position = ftell($this->file_handle);
-        if (false === $position)
+        if (false === $position) {
             throw new IOException('Could not execute tell on reader');
+        }
         return $position;
     }
 

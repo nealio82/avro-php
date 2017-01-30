@@ -30,23 +30,33 @@ use Avro\Schema\Schema;
 require_once('vendor/autoload.php');
 
 $writers_schema_json = <<<_JSON
-{"name":"member",
+{
+ "name":"member",
  "type":"record",
- "fields":[{"name":"member_id", "type":"int"},
-           {"name":"member_name", "type":"string"}]}
+ "fields":
+    [
+        {"name":"member_id", "type":"int"},
+        {"name":"member_name", "type":"string"}
+    ]
+}
 _JSON;
+
 $jose = array('member_id' => 1392, 'member_name' => 'Jose');
 $maria = array('member_id' => 1642, 'member_name' => 'Maria');
 $data = array($jose, $maria);
+
+
 $file_name = 'data.avr';
+
 // Open $file_name for writing, using the given writer's schema
 $data_writer = DataIO::open_file($file_name, 'w', $writers_schema_json);
 // Write each datum to the file
 foreach ($data as $datum) {
     $data_writer->append($datum);
 }
-// Tidy up
 $data_writer->close();
+
+
 // Open $file_name (by default for reading) using the writer's schema
 // included in the file
 $data_reader = DataIO::open_file($file_name);
@@ -58,14 +68,11 @@ foreach ($data_reader->data() as $datum) {
 $data_reader->close();
 
 
-// Create a data string
-// Create a string io object.
 $io = new StringIO();
 
-// Create a datum writer object
 $writers_schema = Schema::parse($writers_schema_json);
-$writer = new IODatumWriter($writers_schema);
-$data_writer = new DataIOWriter($io, $writer, $writers_schema);
+$data_writer = new DataIOWriter($io, new IODatumWriter($writers_schema), $writers_schema);
+
 foreach ($data as $datum) {
     $data_writer->append($datum);
 }

@@ -3,10 +3,11 @@
 namespace Avro\Datum;
 
 use Avro\Avro;
+use Avro\GMP\GMP;
 use Avro\IO\IO;
 
 /**
- * Encodes and writes Avro data to an AvroIO object using
+ * Encodes and writes Avro data to an IO object using
  * Avro binary encoding.
  *
  * @package Avro
@@ -17,7 +18,7 @@ class IOBinaryEncoder
      * Performs encoding of the given float value to a binary string
      *
      * XXX: This is <b>not</b> endian-aware! The {@link Avro::check_platform()}
-     * called in {@link AvroIOBinaryEncoder::__construct()} should ensure the
+     * called in {@link IOBinaryEncoder::__construct()} should ensure the
      * library is only used on little-endian platforms, which ensure the little-endian
      * encoding required by the Avro spec.
      *
@@ -34,7 +35,7 @@ class IOBinaryEncoder
      * Performs encoding of the given double value to a binary string
      *
      * XXX: This is <b>not</b> endian-aware! See comments in
-     * {@link AvroIOBinaryEncoder::float_to_int_bits()} for details.
+     * {@link IOBinaryEncoder::float_to_int_bits()} for details.
      *
      * @param double $double
      * @returns string bytes
@@ -108,7 +109,7 @@ class IOBinaryEncoder
     function write_long($n)
     {
         if (Avro::uses_gmp())
-            $this->write(AvroGMP::encode_long($n));
+            $this->write(GMP::encode_long($n));
         else
             $this->write(self::encode_long($n));
     }

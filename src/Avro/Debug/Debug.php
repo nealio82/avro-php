@@ -1,6 +1,7 @@
 <?php
 
 namespace Avro\Debug;
+use Avro\Exception\Exception;
 
 /**
  * Avro library code debugging functions
@@ -115,7 +116,7 @@ class Debug
     static function ascii_array($str, $format = 'ctrl')
     {
         if (!in_array($format, array('ctrl', 'hex', 'dec')))
-            throw new AvroException('Unrecognized format specifier');
+            throw new Exception('Unrecognized format specifier');
 
         $ctrl_chars = array('NUL', 'SOH', 'STX', 'ETX', 'EOT', 'ENQ', 'ACK', 'BEL',
             'BS', 'HT', 'LF', 'VT', 'FF', 'CR', 'SO', 'SI',

@@ -5,7 +5,7 @@ namespace Avro\IO;
 use Avro\Exception\IOException;
 
 /**
- * AvroIO wrapper for string access
+ * IO wrapper for string access
  * @package Avro
  */
 class StringIO extends IO
@@ -24,7 +24,7 @@ class StringIO extends IO
     private $is_closed;
 
     /**
-     * @param string $str initial value of AvroStringIO buffer. Regardless
+     * @param string $str initial value of StringIO buffer. Regardless
      *                    of the initial value, the pointer is set to the
      *                    beginning of the buffer.
      * @throws IOException if a non-string value is passed as $str
@@ -35,11 +35,12 @@ class StringIO extends IO
         $this->string_buffer = '';
         $this->current_index = 0;
 
-        if (is_string($str))
+        if (is_string($str)) {
             $this->string_buffer .= $str;
-        else
+        } else {
             throw new IOException(
                 sprintf('constructor argument must be a string: %s', gettype($str)));
+        }
     }
 
     /**
@@ -128,7 +129,7 @@ class StringIO extends IO
     }
 
     /**
-     * No-op provided for compatibility with AvroIO interface.
+     * No-op provided for compatibility with IO interface.
      * @returns boolean true
      */
     public function flush()
@@ -152,8 +153,9 @@ class StringIO extends IO
      */
     private function check_closed()
     {
-        if ($this->is_closed())
+        if ($this->is_closed()) {
             throw new IOException('Buffer is closed');
+        }
     }
 
     /**

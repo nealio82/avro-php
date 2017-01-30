@@ -10,20 +10,19 @@ namespace Avro\Schema;
 class ArraySchema extends Schema
 {
     /**
-     * @var Name|Schema named schema name or AvroSchema of
-     *                          array element
+     * @var Name|Schema named schema name or Schema of array element
      */
     private $items;
 
     /**
      * @var boolean true if the items schema
      * FIXME: couldn't we derive this from whether or not $this->items
-     *        is an AvroName or an AvroSchema?
+     *        is an Name or an Schema?
      */
     private $is_items_schema_from_schemata;
 
     /**
-     * @param string|mixed $items AvroNamedSchema name or object form
+     * @param string|mixed $items NamedSchema name or object form
      *        of decoded JSON schema representation.
      * @param string $default_namespace namespace of enclosing schema
      * @param NamedSchemata &$schemata
@@ -47,7 +46,7 @@ class ArraySchema extends Schema
 
 
     /**
-     * @returns Name|Schema named schema name or AvroSchema
+     * @returns Name|Schema named schema name or Schema
      *          of this array schema's elements.
      */
     public function items()

@@ -7,7 +7,7 @@ use Avro\Exception\SchemaParseException;
 /**
  * Parent class of named Avro schema
  * @package Avro
- * @todo Refactor AvroNamedSchema to use an AvroName instance
+ * @todo Refactor NamedSchema to use an AvroName instance
  *       to store name information.
  */
 class NamedSchema extends Schema

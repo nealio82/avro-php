@@ -2,6 +2,7 @@
 
 namespace Avro\Datum;
 
+use Avro\Exception\Exception;
 use Avro\Exception\IOTypeException;
 use Avro\Schema\Schema;
 
@@ -73,7 +74,7 @@ class IODatumWriter
             case Schema::UNION_SCHEMA:
                 return $this->write_union($writers_schema, $datum, $encoder);
             default:
-                throw new AvroException(sprintf('Uknown type: %s',
+                throw new Exception(sprintf('Uknown type: %s',
                     $writers_schema->type));
         }
     }

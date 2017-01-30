@@ -11,8 +11,9 @@ namespace Avro\Exception;
 class IOSchemaMatchException extends Exception
 {
     /**
-     * @param AvroSchema $writers_schema
-     * @param AvroSchema $readers_schema
+     * IOSchemaMatchException constructor.
+     * @param string $writers_schema
+     * @param int $readers_schema
      */
     function __construct($writers_schema, $readers_schema)
     {
