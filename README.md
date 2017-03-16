@@ -1,4 +1,4 @@
-#nealio82/avro-php
+# nealio82/avro-php
 
 This is a package based on the [Apache AVRO PHP library](http://apache.mirror.anlx.net/avro/) (v 1.8.1).
 
