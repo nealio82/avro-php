@@ -391,7 +391,15 @@ class Schema
                 if (is_array($datum))
                 {
                     foreach ($expected_schema->fields() as $field)
-                        if (!array_key_exists($field->name(), $datum) || !self::is_valid_datum($field->type(), $datum[$field->name()]))
+                        if ($field->has_default_value() && !isset($datum[$field->name()]))
+                        {
+                            $value = $field->default_value();
+                        }
+                        else
+                        {
+                            $value = $datum[$field->name()];
+                        }
+                        if ((!$field->has_default_value() && !array_key_exists($field->name(), $datum)) || !self::is_valid_datum($field->type(), $value))
                             return false;
                     return true;
                 }

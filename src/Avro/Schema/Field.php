@@ -132,7 +132,7 @@ class Field extends Schema
         $avro[Schema::TYPE_ATTR] = ($this->is_type_from_schemata)
             ? $this->type->qualified_name() : $this->type->to_avro();
 
-        if (isset($this->default))
+        if ($this->has_default)
             $avro[Field::DEFAULT_ATTR] = $this->default;
 
         if ($this->order)
