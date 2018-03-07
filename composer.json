@@ -1,5 +1,5 @@
 {
-  "name": "nealio82/avro-php",
+  "name": "sparhandy/avro-php",
   "description": "Implementation of Apache's Avro PHP library with Composer support, PSR-4 autoloading, namespaces, and type hinted method parameters",
   "autoload": {
     "psr-4" : {
