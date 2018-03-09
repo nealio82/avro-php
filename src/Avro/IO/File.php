@@ -8,7 +8,7 @@ use Avro\Exception\IOException;
  * IO wrapper for PHP file access functions
  * @package Avro
  */
-class File extends IO
+class File implements IO
 {
     /**
      * @var string fopen read mode value. Used internally.

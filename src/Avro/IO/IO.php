@@ -2,7 +2,7 @@
 
 namespace Avro\IO;
 
-use Avro\Exception\NotImplementedException;
+use Avro\Exception\IOException;
 
 /**
  * Barebones IO base class to provide common interface for file and string
@@ -10,7 +10,7 @@ use Avro\Exception\NotImplementedException;
  *
  * @package Avro
  */
-class IO
+interface IO
 {
 
     /**
@@ -37,33 +37,29 @@ class IO
 
     /**
      * Read $len bytes from IO instance
-     * @var int $len
+     *
+     * @param int $len
+     *
      * @return string bytes read
      */
-    public function read($len)
-    {
-        throw new NotImplementedException('Not implemented');
-    }
+    public function read($len);
 
     /**
-     * Append bytes to this buffer. (Nothing more is needed to support Avro.)
-     * @param str $arg bytes to write
+     * Append bytes to this buffer.
+     *
+     * @param string $arg bytes to write
+     *
      * @returns int count of bytes written.
      * @throws IOException if $args is not a string value.
      */
-    public function write($arg)
-    {
-        throw new NotImplementedException('Not implemented');
-    }
+    public function write($arg);
 
     /**
      * Return byte offset within IO instance
+     *
      * @return int
      */
-    public function tell()
-    {
-        throw new NotImplementedException('Not implemented');
-    }
+    public function tell();
 
     /**
      * Set the position indicator. The new position, measured in bytes
@@ -73,44 +69,31 @@ class IO
      * @param int $offset
      * @param int $whence one of AvroIO::SEEK_SET, AvroIO::SEEK_CUR,
      *                    or Avro::SEEK_END
-     * @returns boolean true
      *
-     * @throws IOException
+     * @returns boolean true
      */
-    public function seek($offset, $whence=self::SEEK_SET)
-    {
-        throw new NotImplementedException('Not implemented');
-    }
+    public function seek($offset, $whence = self::SEEK_SET);
 
     /**
      * Flushes any buffered data to the IO object.
+     *
      * @returns boolean true upon success.
      */
-    public function flush()
-    {
-        throw new NotImplementedException('Not implemented');
-    }
+    public function flush();
 
     /**
      * Returns whether or not the current position at the end of this IO
      * instance.
-     *
      * Note is_eof() is <b>not</b> like eof in C or feof in PHP:
      * it returns TRUE if the *next* read would be end of file,
      * rather than if the *most recent* read read end of file.
+     *
      * @returns boolean true if at the end of file, and false otherwise
      */
-    public function is_eof()
-    {
-        throw new NotImplementedException('Not implemented');
-    }
+    public function is_eof();
 
     /**
      * Closes this IO instance.
      */
-    public function close()
-    {
-        throw new NotImplementedException('Not implemented');
-    }
-
+    public function close();
 }

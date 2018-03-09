@@ -6,9 +6,10 @@ use Avro\Exception\IOException;
 
 /**
  * IO wrapper for string access
+ *
  * @package Avro
  */
-class StringIO extends IO
+class StringIO implements IO
 {
     /**
      * @var string
@@ -27,17 +28,20 @@ class StringIO extends IO
      * @param string $str initial value of StringIO buffer. Regardless
      *                    of the initial value, the pointer is set to the
      *                    beginning of the buffer.
+     *
      * @throws IOException if a non-string value is passed as $str
      */
     public function __construct($str = '')
     {
-        $this->is_closed = false;
+        $this->is_closed     = false;
         $this->string_buffer = '';
         $this->current_index = 0;
 
-        if (is_string($str)) {
+        if (is_string($str))
+        {
             $this->string_buffer .= $str;
-        } else {
+        } else
+        {
             throw new IOException(
                 sprintf('constructor argument must be a string: %s', gettype($str)));
         }
@@ -46,7 +50,9 @@ class StringIO extends IO
     /**
      * Append bytes to this buffer.
      * (Nothing more is needed to support Avro.)
+     *
      * @param str $arg bytes to write
+     *
      * @returns int count of bytes written.
      * @throws IOException if $args is not a string value.
      */
@@ -54,7 +60,9 @@ class StringIO extends IO
     {
         $this->check_closed();
         if (is_string($arg))
+        {
             return $this->append_str($arg);
+        }
         throw new IOException(
             sprintf('write argument must be a string: (%s) %s',
                 gettype($arg), var_export($arg, true)));
@@ -70,11 +78,17 @@ class StringIO extends IO
         $read = '';
 
         for ($i = $this->current_index; $i < ($this->current_index + $len); $i++)
+        {
             $read .= $this->string_buffer[$i];
+        }
         if (strlen($read) < $len)
+        {
             $this->current_index = $this->length();
-        else
+        } else
+        {
             $this->current_index += $len;
+        }
+
         return $read;
     }
 
@@ -85,22 +99,31 @@ class StringIO extends IO
     public function seek($offset, $whence = self::SEEK_SET)
     {
         if (!is_int($offset))
+        {
             throw new IOException('Seek offset must be an integer.');
+        }
         // Prevent seeking before BOF
-        switch ($whence) {
+        switch ($whence)
+        {
             case self::SEEK_SET:
                 if (0 > $offset)
+                {
                     throw new IOException('Cannot seek before beginning of file.');
+                }
                 $this->current_index = $offset;
                 break;
             case self::SEEK_CUR:
                 if (0 > $this->current_index + $whence)
+                {
                     throw new IOException('Cannot seek before beginning of file.');
+                }
                 $this->current_index += $offset;
                 break;
             case self::SEEK_END:
                 if (0 > $this->length() + $offset)
+                {
                     throw new IOException('Cannot seek before beginning of file.');
+                }
                 $this->current_index = $this->length() + $offset;
                 break;
             default:
@@ -130,6 +153,7 @@ class StringIO extends IO
 
     /**
      * No-op provided for compatibility with IO interface.
+     *
      * @returns boolean true
      */
     public function flush()
@@ -139,12 +163,14 @@ class StringIO extends IO
 
     /**
      * Marks this buffer as closed.
+     *
      * @returns boolean true
      */
     public function close()
     {
         $this->check_closed();
         $this->is_closed = true;
+
         return true;
     }
 
@@ -153,28 +179,41 @@ class StringIO extends IO
      */
     private function check_closed()
     {
-        if ($this->is_closed()) {
+        if ($this->is_closed())
+        {
             throw new IOException('Buffer is closed');
         }
     }
 
     /**
      * Appends bytes to this buffer.
+     *
      * @param string $str
+     *
      * @returns integer count of bytes written.
      */
     private function append_str($str)
     {
         $this->check_closed();
+        $isNew = false;
+        if (empty($this->string_buffer))
+        {
+            $isNew = true;
+        }
         $this->string_buffer .= $str;
-        $len = strlen($str);
-        $this->current_index += $len;
+        $len                 = strlen($str);
+        if (!$isNew)
+        {
+            $this->current_index += $len;
+        }
+
         return $len;
     }
 
     /**
      * Truncates the truncate buffer to 0 bytes and returns the pointer
      * to the beginning of the buffer.
+     *
      * @returns boolean true
      */
     public function truncate()
@@ -182,6 +221,7 @@ class StringIO extends IO
         $this->check_closed();
         $this->string_buffer = '';
         $this->current_index = 0;
+
         return true;
     }
 
@@ -202,7 +242,6 @@ class StringIO extends IO
     {
         return $this->string_buffer;
     }
-
 
     /**
      * @returns string
