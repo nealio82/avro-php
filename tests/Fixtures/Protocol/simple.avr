@@ -1,0 +1,99 @@
+{
+    "namespace": "org.apache.avro.test",
+    "protocol": "Simple",
+    "types": [
+        {
+            "name": "Kind",
+            "type": "enum",
+            "symbols": [
+                "FOO",
+                "BAR",
+                "BAZ"
+            ]
+        },
+        {
+            "name": "MD5",
+            "type": "fixed",
+            "size": 16
+        },
+        {
+            "name": "TestRecord",
+            "type": "record",
+            "fields": [
+                {
+                    "name": "name",
+                    "type": "string",
+                    "order": "ignore"
+                },
+                {
+                    "name": "kind",
+                    "type": "Kind",
+                    "order": "descending"
+                },
+                {
+                    "name": "hash",
+                    "type": "MD5"
+                }
+            ]
+        },
+        {
+            "name": "TestError",
+            "type": "error",
+            "fields": [
+                {
+                    "name": "message",
+                    "type": "string"
+                }
+            ]
+        }
+    ],
+    "messages": {
+        "hello": {
+            "request": [
+                {
+                    "name": "greeting",
+                    "type": "string"
+                }
+            ],
+            "response": "string"
+        },
+        "echo": {
+            "request": [
+                {
+                    "name": "record",
+                    "type": "TestRecord"
+                }
+            ],
+            "response": "TestRecord"
+        },
+        "add": {
+            "request": [
+                {
+                    "name": "arg1",
+                    "type": "int"
+                },
+                {
+                    "name": "arg2",
+                    "type": "int"
+                }
+            ],
+            "response": "int"
+        },
+        "echoBytes": {
+            "request": [
+                {
+                    "name": "data",
+                    "type": "bytes"
+                }
+            ],
+            "response": "bytes"
+        },
+        "error": {
+            "request": [],
+            "response": "null",
+            "errors": [
+                "TestError"
+            ]
+        }
+    }
+}

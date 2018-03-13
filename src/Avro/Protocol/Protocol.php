@@ -34,7 +34,7 @@ class Protocol
         $this->name = $avro['protocol'];
 
         if (null !== $avro['types']) {
-            $types = Schema::real_parse($avro['types'], $this->namespace, $this->schemata);
+            $this->types = Schema::real_parse($avro['types'], $this->namespace, $this->schemata);
         }
 
         if (null !== $avro['messages']) {

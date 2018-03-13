@@ -185,7 +185,7 @@ class IOBinaryDecoder
 
     public function skip_long(): void
     {
-        $b = $this->next_byte();
+        $b = ord($this->next_byte());
         while (0 != ($b & 0x80)) {
             $b = $this->next_byte();
         }

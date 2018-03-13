@@ -84,6 +84,7 @@ class DataIOReader
      */
     public function data()
     {
+        $data = [];
         while (true) {
             if (0 == $this->block_count) {
                 if ($this->is_eof()) {
@@ -98,10 +99,11 @@ class DataIOReader
 
                 $this->read_block_header();
             }
-            $data = $this->datum_reader->read($this->decoder);
+            $data[] = $this->datum_reader->read($this->decoder);
             $this->block_count -= 1;
-            yield $data;
         }
+
+        return $data;
     }
 
     /**

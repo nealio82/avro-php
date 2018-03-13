@@ -244,15 +244,9 @@ class StringIO implements IO
     private function append_str($str)
     {
         $this->check_closed();
-        $isNew = false;
-        if (empty($this->string_buffer)) {
-            $isNew = true;
-        }
         $this->string_buffer .= $str;
         $len = strlen($str);
-        if (!$isNew) {
-            $this->current_index += $len;
-        }
+        $this->current_index += $len;
 
         return $len;
     }

@@ -3,6 +3,7 @@
 namespace Avro\Protocol;
 
 use Avro\Schema\Name;
+use Avro\Schema\PrimitiveSchema;
 use Avro\Schema\RecordSchema;
 use Avro\Schema\Schema;
 
