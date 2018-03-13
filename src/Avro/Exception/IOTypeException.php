@@ -4,16 +4,14 @@ namespace Avro\Exception;
 
 /**
  * Exceptions arising from writing or reading Avro data.
- *
- * @package Avro
  */
 class IOTypeException extends Exception
 {
-
     /**
      * IOTypeException constructor.
+     *
      * @param string $expected_schema
-     * @param int $datum
+     * @param int    $datum
      */
     public function __construct($expected_schema, $datum)
     {

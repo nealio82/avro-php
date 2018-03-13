@@ -10,9 +10,7 @@ use Avro\Schema\Schema;
 use Avro\Util\Util;
 
 /**
- *
  * Reads Avro data from an IO source using an AvroSchema.
- * @package Avro
  */
 class DataIOReader
 {
@@ -47,15 +45,16 @@ class DataIOReader
     private $block_count;
 
     /**
-     * @param IO $io source from which to read
+     * @param IO            $io           source from which to read
      * @param IODatumReader $datum_reader reader that understands
-     *                                        the data schema
+     *                                    the data schema
+     *
      * @throws DataIoException if $io is not an instance of IO
-     * @uses read_header()
+     *
+     * @uses \read_header()
      */
     public function __construct(IO $io, IODatumReader $datum_reader)
     {
-
         if (!($io instanceof IO)) {
             throw new DataIoException('io must be instance of IO');
         }
@@ -79,35 +78,9 @@ class DataIOReader
     }
 
     /**
-     * Reads header of object container
-     * @throws DataIoException if the file is not an Avro data file.
-     */
-    private function read_header()
-    {
-        $this->seek(0, IO::SEEK_SET);
-
-        $magic = $this->read(DataIO::magic_size());
-
-        if (strlen($magic) < DataIO::magic_size())
-            throw new DataIoException(
-                'Not an Avro data file: shorter than the Avro magic block');
-
-        if (DataIO::magic() != $magic) {
-
-            throw new DataIoException(
-                sprintf('Not an Avro data file: %s does not match %s',
-                    $magic, DataIO::magic()));
-        }
-
-        $this->metadata = $this->datum_reader->read_data(DataIO::metadata_schema(),
-            DataIO::metadata_schema(),
-            $this->decoder);
-        $this->sync_marker = $this->read(DataIO::SYNC_SIZE);
-    }
-
-    /**
      * @internal Would be nice to implement data() as an iterator, I think
-     * @returns \Generator
+     *
+     * @return \Generator
      */
     public function data()
     {
@@ -132,20 +105,13 @@ class DataIOReader
     }
 
     /**
-     * Closes this writer (and its IO object.)
-     * @uses IO::close()
+     * Closes this writer (and its IO object.).
+     *
+     * @uses \IO::close()
      */
     public function close()
     {
         return $this->io->close();
-    }
-
-    /**
-     * @uses IO::seek()
-     */
-    private function seek($offset, $whence)
-    {
-        return $this->io->seek($offset, $whence);
     }
 
     public function getSyncMarker()
@@ -159,7 +125,48 @@ class DataIOReader
     }
 
     /**
-     * @uses IO::read()
+     * Reads header of object container.
+     *
+     * @throws DataIoException if the file is not an Avro data file
+     */
+    private function read_header(): void
+    {
+        $this->seek(0, IO::SEEK_SET);
+
+        $magic = $this->read(DataIO::magic_size());
+
+        if (strlen($magic) < DataIO::magic_size()) {
+            throw new DataIoException(
+                'Not an Avro data file: shorter than the Avro magic block');
+        }
+
+        if (DataIO::magic() != $magic) {
+            throw new DataIoException(
+                sprintf('Not an Avro data file: %s does not match %s',
+                    $magic, DataIO::magic()));
+        }
+
+        $this->metadata = $this->datum_reader->read_data(DataIO::metadata_schema(),
+            DataIO::metadata_schema(),
+            $this->decoder);
+        $this->sync_marker = $this->read(DataIO::SYNC_SIZE);
+    }
+
+    /**
+     * @uses \IO::seek()
+     *
+     * @param mixed $offset
+     * @param mixed $whence
+     */
+    private function seek($offset, $whence)
+    {
+        return $this->io->seek($offset, $whence);
+    }
+
+    /**
+     * @uses \IO::read()
+     *
+     * @param mixed $len
      */
     private function read($len)
     {
@@ -167,7 +174,7 @@ class DataIOReader
     }
 
     /**
-     * @uses IO::is_eof()
+     * @uses \IO::is_eof()
      */
     private function is_eof()
     {
@@ -179,20 +186,23 @@ class DataIOReader
         $proposed_sync_marker = $this->read(DataIO::SYNC_SIZE);
         if ($proposed_sync_marker != $this->sync_marker) {
             $this->seek(-DataIO::SYNC_SIZE, IO::SEEK_CUR);
+
             return false;
         }
+
         return true;
     }
 
     /**
      * Reads the block header (which includes the count of items in the block
-     * and the length in bytes of the block)
-     * @returns int length in bytes of the block.
+     * and the length in bytes of the block).
+     *
+     * @return int length in bytes of the block
      */
     private function read_block_header()
     {
         $this->block_count = $this->decoder->read_long();
+
         return $this->decoder->read_long();
     }
-
 }

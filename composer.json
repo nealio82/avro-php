@@ -1,9 +1,18 @@
 {
-  "name": "sparhandy/avro-php",
-  "description": "Implementation of Apache's Avro PHP library with Composer support, PSR-4 autoloading, namespaces, and type hinted method parameters",
-  "autoload": {
-    "psr-4" : {
-      "Avro\\": "src/Avro"
+    "name": "sparhandy/avro-php",
+    "description": "Implementation of Apache's Avro PHP library with Composer support, PSR-4 autoloading, namespaces, and type hinted method parameters",
+    "require": {
+        "php": "^7.2"
+    },
+    "require-dev": {
+        "friendsofphp/php-cs-fixer": "^2.10"
+    },
+    "config": {
+        "sort-packages": true
+    },
+    "autoload": {
+        "psr-4" : {
+            "Avro\\": "src/Avro"
+        }
     }
-  }
 }

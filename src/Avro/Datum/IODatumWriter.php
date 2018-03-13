@@ -9,8 +9,6 @@ use Avro\Schema\Schema;
 /**
  * Handles schema-specific writing of data to the encoder.
  * Ensures that each datum written is consistent with the writer's schema.
- *
- * @package Avro
  */
 class IODatumWriter
 {
@@ -34,18 +32,17 @@ class IODatumWriter
      * @param                 $datum
      * @param IOBinaryEncoder $encoder
      *
-     * @returns mixed
      * @throws IOTypeException if $datum is invalid for $writers_schema
+     *
+     * @return mixed
      */
     public function write_data(Schema $writers_schema, $datum, IOBinaryEncoder $encoder)
     {
-        if (!Schema::is_valid_datum($writers_schema, $datum))
-        {
+        if (!Schema::is_valid_datum($writers_schema, $datum)) {
             throw new IOTypeException($writers_schema, $datum);
         }
 
-        switch ($writers_schema->type())
-        {
+        switch ($writers_schema->type()) {
             case Schema::NULL_TYPE:
                 return $encoder->write_null($datum);
             case Schema::BOOLEAN_TYPE:
@@ -86,7 +83,7 @@ class IODatumWriter
      * @param                 $datum
      * @param IOBinaryEncoder $encoder
      */
-    public function write($datum, IOBinaryEncoder $encoder)
+    public function write($datum, IOBinaryEncoder $encoder): void
     {
         $this->write_data($this->writers_schema, $datum, $encoder);
     }
@@ -99,12 +96,10 @@ class IODatumWriter
     private function write_array(Schema $writers_schema, $datum, IOBinaryEncoder $encoder)
     {
         $datum_count = count($datum);
-        if (0 < $datum_count)
-        {
+        if (0 < $datum_count) {
             $encoder->write_long($datum_count);
             $items = $writers_schema->items();
-            foreach ($datum as $item)
-            {
+            foreach ($datum as $item) {
                 $this->write_data($items, $item, $encoder);
             }
         }
@@ -112,14 +107,12 @@ class IODatumWriter
         return $encoder->write_long(0);
     }
 
-    private function write_map(Schema $writers_schema, $datum, IOBinaryEncoder $encoder)
+    private function write_map(Schema $writers_schema, $datum, IOBinaryEncoder $encoder): void
     {
         $datum_count = count($datum);
-        if ($datum_count > 0)
-        {
+        if ($datum_count > 0) {
             $encoder->write_long($datum_count);
-            foreach ($datum as $k => $v)
-            {
+            foreach ($datum as $k => $v) {
                 $encoder->write_string($k);
                 $this->write_data($writers_schema->values(), $v, $encoder);
             }
@@ -127,22 +120,19 @@ class IODatumWriter
         $encoder->write_long(0);
     }
 
-    private function write_union(Schema $writers_schema, $datum, IOBinaryEncoder $encoder)
+    private function write_union(Schema $writers_schema, $datum, IOBinaryEncoder $encoder): void
     {
         $datum_schema_index = -1;
-        $datum_schema       = null;
-        foreach ($writers_schema->schemas() as $index => $schema)
-        {
-            if (Schema::is_valid_datum($schema, $datum))
-            {
+        $datum_schema = null;
+        foreach ($writers_schema->schemas() as $index => $schema) {
+            if (Schema::is_valid_datum($schema, $datum)) {
                 $datum_schema_index = $index;
-                $datum_schema       = $schema;
+                $datum_schema = $schema;
                 break;
             }
         }
 
-        if (is_null($datum_schema))
-        {
+        if (null === $datum_schema) {
             throw new IOTypeException($writers_schema, $datum);
         }
 
@@ -159,22 +149,19 @@ class IODatumWriter
 
     private function write_fixed(Schema $writers_schema, $datum, IOBinaryEncoder $encoder)
     {
-        /**
+        /*
          * NOTE Unused $writers_schema parameter included for consistency
          * with other write_* methods.
          */
         return $encoder->write($datum);
     }
 
-    private function write_record(Schema $writers_schema, $datum, IOBinaryEncoder $encoder)
+    private function write_record(Schema $writers_schema, $datum, IOBinaryEncoder $encoder): void
     {
-        foreach ($writers_schema->fields() as $field)
-        {
-            if ($field->has_default_value() && !isset($datum[$field->name()]))
-            {
+        foreach ($writers_schema->fields() as $field) {
+            if ($field->has_default_value() && !isset($datum[$field->name()])) {
                 $value = $field->default_value();
-            } else
-            {
+            } else {
                 $value = $datum[$field->name()];
             }
 

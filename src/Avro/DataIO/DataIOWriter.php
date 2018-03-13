@@ -11,25 +11,10 @@ use Avro\IO\StringIO;
 use Avro\Schema\Schema;
 
 /**
- * Writes Avro data to an AvroIO source using an AvroSchema
- * @package Avro
+ * Writes Avro data to an AvroIO source using an AvroSchema.
  */
 class DataIOWriter
 {
-    /**
-     * @returns string a new, unique sync marker.
-     */
-    private static function generate_sync_marker()
-    {
-        // From http://php.net/manual/en/function.mt-rand.php comments
-        return pack('S8',
-            mt_rand(0, 0xffff), mt_rand(0, 0xffff),
-            mt_rand(0, 0xffff),
-            mt_rand(0, 0xffff) | 0x4000,
-            mt_rand(0, 0xffff) | 0x8000,
-            mt_rand(0, 0xffff), mt_rand(0, 0xffff), mt_rand(0, 0xffff));
-    }
-
     /**
      * @var IO object container where data is written
      */
@@ -66,9 +51,9 @@ class DataIOWriter
     private $metadata;
 
     /**
-     * @param IO $io
+     * @param IO            $io
      * @param IODatumWriter $datum_writer
-     * @param Schema $writers_schema
+     * @param Schema        $writers_schema
      */
     public function __construct(IO $io, IODatumWriter $datum_writer, Schema $writers_schema = null)
     {
@@ -82,12 +67,12 @@ class DataIOWriter
         $this->buffer = new StringIO();
         $this->buffer_encoder = new IOBinaryEncoder($this->buffer);
         $this->block_count = 0;
-        $this->metadata = array();
+        $this->metadata = [];
 
         if ($writers_schema) {
             $this->sync_marker = self::generate_sync_marker();
             $this->metadata[DataIO::METADATA_CODEC_ATTR] = DataIO::NULL_CODEC;
-            $this->metadata[DataIO::METADATA_SCHEMA_ATTR] = strval($writers_schema);
+            $this->metadata[DataIO::METADATA_SCHEMA_ATTR] = (string) $writers_schema;
             $this->write_header();
         } else {
             $dataIOReader = new DataIOReader($this->io, new IODatumReader());
@@ -104,59 +89,83 @@ class DataIOWriter
     /**
      * @param mixed $datum
      */
-    public function append($datum)
+    public function append($datum): void
     {
         $this->datum_writer->write($datum, $this->buffer_encoder);
-        $this->block_count++;
+        ++$this->block_count;
 
-        if ($this->buffer->length() >= DataIO::SYNC_INTERVAL)
+        if ($this->buffer->length() >= DataIO::SYNC_INTERVAL) {
             $this->write_block();
+        }
     }
 
     /**
      * Flushes buffer to IO object container and closes it.
+     *
      * @return mixed value of $io->close()
+     *
      * @see IO::close()
      */
     public function close()
     {
         $this->flush();
+
         return $this->io->close();
     }
 
     /**
+     * @return string a new, unique sync marker
+     */
+    private static function generate_sync_marker()
+    {
+        // From http://php.net/manual/en/function.mt-rand.php comments
+        return pack('S8',
+            mt_rand(0, 0xffff), mt_rand(0, 0xffff),
+            mt_rand(0, 0xffff),
+            mt_rand(0, 0xffff) | 0x4000,
+            mt_rand(0, 0xffff) | 0x8000,
+            mt_rand(0, 0xffff), mt_rand(0, 0xffff), mt_rand(0, 0xffff));
+    }
+
+    /**
      * Flushes buffer to IO object container.
-     * @returns mixed value of $io->flush()
+     *
+     * @return mixed value of $io->flush()
+     *
      * @see IO::flush()
      */
     private function flush()
     {
         $this->write_block();
+
         return $this->io->flush();
     }
 
     /**
      * Writes a block of data to the IO object container.
+     *
      * @throws DataIOException if the codec provided by the encoder
-     *         is not supported
+     *                         is not supported
+     *
      * @internal Should the codec check happen in the constructor?
      *           Why wait until we're writing data?
      */
-    private function write_block()
+    private function write_block(): void
     {
         if ($this->block_count > 0) {
             $this->encoder->write_long($this->block_count);
-            $to_write = strval($this->buffer);
+            $to_write = (string) ($this->buffer);
             $this->encoder->write_long(strlen($to_write));
 
             if (DataIO::is_valid_codec(
                 $this->metadata[DataIO::METADATA_CODEC_ATTR])
-            )
+            ) {
                 $this->write($to_write);
-            else
+            } else {
                 throw new DataIOException(
                     sprintf('codec %s is not supported',
                         $this->metadata[DataIO::METADATA_CODEC_ATTR]));
+            }
 
             $this->write($this->sync_marker);
             $this->buffer->truncate();
@@ -165,9 +174,9 @@ class DataIOWriter
     }
 
     /**
-     * Writes the header of the IO object container
+     * Writes the header of the IO object container.
      */
-    private function write_header()
+    private function write_header(): void
     {
         $this->write(DataIO::magic());
         $this->datum_writer->write_data(DataIO::metadata_schema(),
@@ -177,7 +186,8 @@ class DataIOWriter
 
     /**
      * @param string $bytes
-     * @uses IO::write()
+     *
+     * @uses \IO::write()
      */
     private function write($bytes)
     {
@@ -187,7 +197,8 @@ class DataIOWriter
     /**
      * @param int $offset
      * @param int $whence
-     * @uses IO::seek()
+     *
+     * @uses \IO::seek()
      */
     private function seek($offset, $whence)
     {

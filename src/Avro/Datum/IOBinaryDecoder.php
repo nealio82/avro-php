@@ -9,15 +9,29 @@ use Avro\IO\IO;
 /**
  * Decodes and reads Avro data from an IO object encoded using
  * Avro binary encoding.
- *
- * @package Avro
  */
 class IOBinaryDecoder
 {
+    /**
+     * @var IO
+     */
+    private $io;
+
+    /**
+     * @param IO $io object from which to read
+     */
+    public function __construct(IO $io)
+    {
+        Avro::check_platform();
+        $this->io = $io;
+    }
 
     /**
      * @param int[] array of byte ascii values
-     * @returns long decoded value
+     * @param mixed $bytes
+     *
+     * @return long decoded value
+     *
      * @internal Requires 64-bit platform
      */
     public static function decode_long_from_array($bytes)
@@ -30,7 +44,8 @@ class IOBinaryDecoder
             $n |= (($b & 0x7f) << $shift);
             $shift += 7;
         }
-        return (($n >> 1) ^ -($n & 1));
+
+        return ($n >> 1) ^ -($n & 1);
     }
 
     /**
@@ -40,12 +55,14 @@ class IOBinaryDecoder
      * {@link IOBinaryEncoder::float_to_int_bits()} for details.
      *
      * @param string $bits
-     * @returns float
+     *
+     * @return float
      */
-    static public function int_bits_to_float($bits)
+    public static function int_bits_to_float($bits)
     {
         $float = unpack('f', $bits);
-        return (float)$float[1];
+
+        return (float) $float[1];
     }
 
     /**
@@ -55,72 +72,48 @@ class IOBinaryDecoder
      * {@link IOBinaryEncoder::float_to_int_bits()} for details.
      *
      * @param string $bits
-     * @returns float
+     *
+     * @return float
      */
-    static public function long_bits_to_double($bits)
+    public static function long_bits_to_double($bits)
     {
         $double = unpack('d', $bits);
-        return (double)$double[1];
+
+        return (float) $double[1];
     }
 
-    /**
-     * @var IO
-     */
-    private $io;
-
-    /**
-     * @param IO $io object from which to read.
-     */
-    public function __construct(IO $io)
-    {
-        Avro::check_platform();
-        $this->io = $io;
-    }
-
-    /**
-     * @returns string the next byte from $this->io.
-     * @throws Exception if the next byte cannot be read.
-     */
-    private function next_byte()
-    {
-        return $this->read(1);
-    }
-
-    /**
-     * @returns null
-     */
     public function read_null()
     {
         return null;
     }
 
     /**
-     * @returns boolean
+     * @return bool
      */
     public function read_boolean()
     {
-        return (boolean)(1 == ord($this->next_byte()));
+        return (bool) (1 == ord($this->next_byte()));
     }
 
     /**
-     * @returns int
+     * @return int
      */
     public function read_int()
     {
-        return (int)$this->read_long();
+        return (int) $this->read_long();
     }
 
     /**
-     * @returns long
+     * @return long
      */
     public function read_long()
     {
         $byte = ord($this->next_byte());
-        $bytes = array($byte);
+        $bytes = [$byte];
 
         while (0 != ($byte & 0x80)) {
             $byte = ord($this->next_byte());
-            $bytes [] = $byte;
+            $bytes[] = $byte;
         }
 
         if (Avro::uses_gmp()) {
@@ -131,7 +124,7 @@ class IOBinaryDecoder
     }
 
     /**
-     * @returns float
+     * @return float
      */
     public function read_float()
     {
@@ -139,7 +132,7 @@ class IOBinaryDecoder
     }
 
     /**
-     * @returns double
+     * @return float
      */
     public function read_double()
     {
@@ -149,7 +142,8 @@ class IOBinaryDecoder
     /**
      * A string is encoded as a long followed by that many bytes
      * of UTF-8 encoded character data.
-     * @returns string
+     *
+     * @return string
      */
     public function read_string()
     {
@@ -157,7 +151,7 @@ class IOBinaryDecoder
     }
 
     /**
-     * @returns string
+     * @return string
      */
     public function read_bytes()
     {
@@ -166,7 +160,8 @@ class IOBinaryDecoder
 
     /**
      * @param int $len count of bytes to read
-     * @returns string
+     *
+     * @return string
      */
     public function read($len)
     {
@@ -188,11 +183,12 @@ class IOBinaryDecoder
         return $this->skip_long();
     }
 
-    public function skip_long()
+    public function skip_long(): void
     {
         $b = $this->next_byte();
-        while (0 != ($b & 0x80))
+        while (0 != ($b & 0x80)) {
             $b = $this->next_byte();
+        }
     }
 
     public function skip_float()
@@ -217,16 +213,28 @@ class IOBinaryDecoder
 
     /**
      * @param int $len count of bytes to skip
-     * @uses IO::seek()
+     *
+     * @uses \IO::seek()
      */
-    public function skip($len)
+    public function skip($len): void
     {
         $this->seek($len, IO::SEEK_CUR);
     }
 
     /**
-     * @returns int position of pointer in IO instance
-     * @uses IO::tell()
+     * @throws Exception if the next byte cannot be read
+     *
+     * @return string the next byte from $this->io
+     */
+    private function next_byte()
+    {
+        return $this->read(1);
+    }
+
+    /**
+     * @return int position of pointer in IO instance
+     *
+     * @uses \IO::tell()
      */
     private function tell()
     {
@@ -236,8 +244,10 @@ class IOBinaryDecoder
     /**
      * @param int $offset
      * @param int $whence
-     * @returns boolean true upon success
-     * @uses IO::seek()
+     *
+     * @return bool true upon success
+     *
+     * @uses \IO::seek()
      */
     private function seek($offset, $whence)
     {

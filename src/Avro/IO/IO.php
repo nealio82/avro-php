@@ -7,36 +7,33 @@ use Avro\Exception\IOException;
 /**
  * Barebones IO base class to provide common interface for file and string
  * access within the Avro classes.
- *
- * @package Avro
  */
 interface IO
 {
-
     /**
      * @var string general read mode
      */
     const READ_MODE = 'r';
     /**
-     * @var string general write mode.
+     * @var string general write mode
      */
     const WRITE_MODE = 'w';
 
     /**
-     * @var int set position equal to $offset bytes
+     * @var int set position equal to offset bytes
      */
     const SEEK_CUR = SEEK_CUR;
     /**
-     * @var int set position to current index + $offset bytes
+     * @var int set position to current index + offset bytes
      */
     const SEEK_SET = SEEK_SET;
     /**
-     * @var int set position to end of file + $offset bytes
+     * @var int set position to end of file + offset bytes
      */
     const SEEK_END = SEEK_END;
 
     /**
-     * Read $len bytes from IO instance
+     * Read $len bytes from IO instance.
      *
      * @param int $len
      *
@@ -49,13 +46,14 @@ interface IO
      *
      * @param string $arg bytes to write
      *
-     * @returns int count of bytes written.
-     * @throws IOException if $args is not a string value.
+     * @throws IOException if $args is not a string value
+     *
+     * @return int count of bytes written
      */
     public function write($arg);
 
     /**
-     * Return byte offset within IO instance
+     * Return byte offset within IO instance.
      *
      * @return int
      */
@@ -70,14 +68,14 @@ interface IO
      * @param int $whence one of AvroIO::SEEK_SET, AvroIO::SEEK_CUR,
      *                    or Avro::SEEK_END
      *
-     * @returns boolean true
+     * @return bool true
      */
     public function seek($offset, $whence = self::SEEK_SET);
 
     /**
      * Flushes any buffered data to the IO object.
      *
-     * @returns boolean true upon success.
+     * @return bool true upon success
      */
     public function flush();
 
@@ -88,7 +86,7 @@ interface IO
      * it returns TRUE if the *next* read would be end of file,
      * rather than if the *most recent* read read end of file.
      *
-     * @returns boolean true if at the end of file, and false otherwise
+     * @return bool true if at the end of file, and false otherwise
      */
     public function is_eof();
 

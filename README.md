@@ -9,7 +9,7 @@ The core logic remains the same but I've added Composer support, PSR-4 autoloadi
 ### Installation
 
 ```bash
-$ composer require nealio82/avro-php
+$ composer require sparhandy/avro-php
 ```
 
 ### Usage

@@ -22,7 +22,8 @@ class DataIO
     const SYNC_SIZE = 16;
 
     /**
-     * @var int   count of items per block, arbitrarily set to 4000 * SYNC_SIZE
+     * @var int count of items per block, arbitrarily set to 4000 * SYNC_SIZE
+     *
      * @todo make this value configurable
      */
     const SYNC_INTERVAL = 64000;
@@ -53,10 +54,11 @@ class DataIO
 
     /**
      * @var array array of valid codec names
+     *
      * @todo Avro implementations are required to implement deflate codec as well,
      *       so implement it already!
      */
-    private static $valid_codecs = array(self::NULL_CODEC);
+    private static $valid_codecs = [self::NULL_CODEC];
 
     /**
      * @var Schema cached version of metadata schema object
@@ -64,53 +66,54 @@ class DataIO
     private static $metadata_schema;
 
     /**
-     * @returns the initial "magic" segment of an Avro container file header.
+     * @return the initial "magic" segment of an Avro container file header
      */
     public static function magic()
     {
-        return ('Obj' . pack('c', self::VERSION));
+        return 'Obj'.pack('c', self::VERSION);
     }
 
     /**
-     * @returns int count of bytes in the initial "magic" segment of the
-     *              Avro container file header
+     * @return int count of bytes in the initial "magic" segment of the
+     *             Avro container file header
      */
     public static function magic_size()
     {
         return strlen(self::magic());
     }
 
-
     /**
-     * @returns Schema object of Avro container file metadata.
+     * @return Schema object of Avro container file metadata
      */
     public static function metadata_schema()
     {
-        if (is_null(self::$metadata_schema)) {
+        if (null === self::$metadata_schema) {
             self::$metadata_schema = Schema::parse(self::METADATA_SCHEMA_JSON);
         }
+
         return self::$metadata_schema;
     }
 
     /**
-     * @param string $file_path file_path of file to open
-     * @param string $mode one of File::READ_MODE or File::WRITE_MODE
+     * @param string $file_path   file_path of file to open
+     * @param string $mode        one of File::READ_MODE or File::WRITE_MODE
      * @param string $schema_json JSON of writer's schema
-     * @returns DataIOWriter instance of DataIOWriter
      *
      * @throws DataIOException if $writers_schema is not provided
-     *         or if an invalid $mode is given.
+     *                         or if an invalid $mode is given
+     *
+     * @return DataIOWriter instance of DataIOWriter
      */
     public static function open_file($file_path, $mode = File::READ_MODE,
                                      $schema_json = null)
     {
-        $schema = !is_null($schema_json)
+        $schema = null !== $schema_json
             ? Schema::parse($schema_json) : null;
 
         $io = false;
         switch ($mode) {
             case File::WRITE_MODE:
-                if (is_null($schema)) {
+                if (null === $schema) {
                     throw new DataIOException('Writing an Avro file requires a schema.');
                 }
                 $file = new File($file_path, File::WRITE_MODE);
@@ -125,20 +128,14 @@ class DataIO
                     sprintf("Only modes '%s' and '%s' allowed. You gave '%s'.",
                         File::READ_MODE, File::WRITE_MODE, $mode));
         }
+
         return $io;
     }
 
     /**
-     * @returns array array of valid codecs
-     */
-    private static function valid_codecs()
-    {
-        return self::$valid_codecs;
-    }
-
-    /**
      * @param string $codec
-     * @returns boolean true if $codec is a valid codec value and false otherwise
+     *
+     * @return bool true if $codec is a valid codec value and false otherwise
      */
     public static function is_valid_codec($codec)
     {
@@ -146,25 +143,36 @@ class DataIO
     }
 
     /**
-     * @param IO $io
+     * @param IO     $io
      * @param Schema $schema
-     * @returns DataIOWriter
+     *
+     * @return DataIOWriter
      */
     protected static function open_writer(IO $io, Schema $schema)
     {
         $writer = new IODatumWriter($schema);
+
         return new DataIOWriter($io, $writer, $schema);
     }
 
     /**
-     * @param IO $io
+     * @param IO     $io
      * @param Schema $schema
-     * @returns DataIOReader
+     *
+     * @return DataIOReader
      */
     protected static function open_reader(IO $io, Schema $schema = null)
     {
         $reader = new IODatumReader(null, $schema);
+
         return new DataIOReader($io, $reader);
     }
 
+    /**
+     * @return array array of valid codecs
+     */
+    private static function valid_codecs()
+    {
+        return self::$valid_codecs;
+    }
 }

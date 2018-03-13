@@ -5,12 +5,10 @@ namespace Avro\Schema;
 use Avro\Exception\SchemaParseException;
 
 /**
- * Field of an {@link RecordSchema}
- * @package Avro
+ * Field of an {@link RecordSchema}.
  */
 class Field extends Schema
 {
-
     /**
      * @var string fields name attribute name
      */
@@ -44,31 +42,11 @@ class Field extends Schema
     /**
      * @var array list of valid field sort order values
      */
-    private static $valid_field_sort_orders = array(self::ASC_SORT_ORDER,
+    private static $valid_field_sort_orders = [
+        self::ASC_SORT_ORDER,
         self::DESC_SORT_ORDER,
-        self::IGNORE_SORT_ORDER);
-
-
-    /**
-     * @param string $order
-     * @returns boolean
-     */
-    private static function is_valid_field_sort_order($order)
-    {
-        return in_array($order, self::$valid_field_sort_orders);
-    }
-
-    /**
-     * @param string $order
-     * @throws SchemaParseException if $order is not a valid
-     *                                  field order value.
-     */
-    private static function check_order_value($order)
-    {
-        if (!is_null($order) && !self::is_valid_field_sort_order($order))
-            throw new SchemaParseException(
-                sprintf('Invalid field sort order %s', $order));
-    }
+        self::IGNORE_SORT_ORDER,
+    ];
 
     /**
      * @var string
@@ -76,7 +54,7 @@ class Field extends Schema
     private $name;
 
     /**
-     * @var boolean whether or no there is a default value
+     * @var bool whether or no there is a default value
      */
     private $has_default;
 
@@ -91,8 +69,8 @@ class Field extends Schema
     private $order;
 
     /**
-     * @var boolean whether or not the NamedSchema of this field is
-     *              defined in the NamedSchemata instance
+     * @var bool whether or not the NamedSchema of this field is
+     *           defined in the NamedSchemata instance
      */
     private $is_type_from_schemata;
 
@@ -100,49 +78,54 @@ class Field extends Schema
      * @param string $type
      * @param string $name
      * @param Schema $schema
-     * @param boolean $is_type_from_schemata
+     * @param bool   $is_type_from_schemata
      * @param string $default
      * @param string $order
+     * @param mixed  $has_default
+     *
      * @todo Check validity of $default value
      * @todo Check validity of $order value
      */
     public function __construct($name, Schema $schema, $is_type_from_schemata,
                                 $has_default, $default, $order = null)
     {
-        if (!Name::is_well_formed_name($name))
+        if (!Name::is_well_formed_name($name)) {
             throw new SchemaParseException('Field requires a "name" attribute');
-
+        }
         $this->type = $schema;
         $this->is_type_from_schemata = $is_type_from_schemata;
         $this->name = $name;
         $this->has_default = $has_default;
-        if ($this->has_default)
+        if ($this->has_default) {
             $this->default = $default;
+        }
         $this->check_order_value($order);
         $this->order = $order;
     }
 
     /**
-     * @returns mixed
+     * @return mixed
      */
     public function to_avro()
     {
-        $avro = array(Field::FIELD_NAME_ATTR => $this->name);
+        $avro = [self::FIELD_NAME_ATTR => $this->name];
 
         $avro[Schema::TYPE_ATTR] = ($this->is_type_from_schemata)
             ? $this->type->qualified_name() : $this->type->to_avro();
 
-        if ($this->has_default)
-            $avro[Field::DEFAULT_ATTR] = $this->default;
+        if ($this->has_default) {
+            $avro[self::DEFAULT_ATTR] = $this->default;
+        }
 
-        if ($this->order)
-            $avro[Field::ORDER_ATTR] = $this->order;
+        if ($this->order) {
+            $avro[self::ORDER_ATTR] = $this->order;
+        }
 
         return $avro;
     }
 
     /**
-     * @returns string the name of this field
+     * @return string the name of this field
      */
     public function name()
     {
@@ -150,7 +133,7 @@ class Field extends Schema
     }
 
     /**
-     * @returns mixed the default value of this field
+     * @return mixed the default value of this field
      */
     public function default_value()
     {
@@ -158,10 +141,34 @@ class Field extends Schema
     }
 
     /**
-     * @returns boolean true if the field has a default and false otherwise
+     * @return bool true if the field has a default and false otherwise
      */
     public function has_default_value()
     {
         return $this->has_default;
+    }
+
+    /**
+     * @param string $order
+     *
+     * @return bool
+     */
+    private static function is_valid_field_sort_order($order)
+    {
+        return in_array($order, self::$valid_field_sort_orders);
+    }
+
+    /**
+     * @param string $order
+     *
+     * @throws SchemaParseException if $order is not a valid
+     *                              field order value
+     */
+    private static function check_order_value($order): void
+    {
+        if (null !== $order && !self::is_valid_field_sort_order($order)) {
+            throw new SchemaParseException(
+                sprintf('Invalid field sort order %s', $order));
+        }
     }
 }
