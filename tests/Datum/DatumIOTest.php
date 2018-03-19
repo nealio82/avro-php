@@ -28,8 +28,8 @@ class DatumIOTest extends TestCase
             $output,
             sprintf(
                 "expected: %s\n  actual: %s",
-                Debug::ascii_string($binary, 'hex'),
-                Debug::ascii_string($output, 'hex')
+                Debug::asciiString($binary, 'hex'),
+                Debug::asciiString($output, 'hex')
             )
         );
 

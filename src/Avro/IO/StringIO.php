@@ -9,125 +9,84 @@ use Avro\Exception\IOException;
  */
 class StringIO implements IO
 {
-    /**
-     * @var string
-     */
-    private $string_buffer;
-    /**
-     * @var int current position in string
-     */
-    private $current_index;
-    /**
-     * @var bool whether or not the string is closed
-     */
-    private $is_closed;
+    private $stringBuffer = '';
+    private $currentIndex = 0;
+    private $isClosed = false;
 
-    /**
-     * @param string $str initial value of StringIO buffer. Regardless
-     *                    of the initial value, the pointer is set to the
-     *                    beginning of the buffer.
-     *
-     * @throws IOException if a non-string value is passed as $str
-     */
-    public function __construct($str = '')
+    public function __construct(string $string = '')
     {
-        $this->is_closed = false;
-        $this->string_buffer = '';
-        $this->current_index = 0;
-
-        if (is_string($str)) {
-            $this->string_buffer .= $str;
-        } else {
-            throw new IOException(
-                sprintf('constructor argument must be a string: %s', gettype($str)));
+        if (!is_string($string)) {
+            throw new IOException(sprintf('constructor argument must be a string: %s', gettype($string)));
         }
+
+        $this->stringBuffer .= $string;
     }
 
-    /**
-     * @return string
-     */
     public function __toString()
     {
-        return $this->string_buffer;
+        return $this->stringBuffer;
     }
 
     /**
-     * Append bytes to this buffer.
-     * (Nothing more is needed to support Avro.).
-     *
-     * @param string $arg bytes to write
-     *
-     * @throws IOException if $args is not a string value
-     *
-     * @return int count of bytes written
+     * @todo test for fencepost errors write updating currentIndex
      */
-    public function write($arg)
+    public function read(int $length): string
     {
-        $this->check_closed();
-        if (is_string($arg)) {
-            return $this->append_str($arg);
-        }
-        throw new IOException(
-            sprintf('write argument must be a string: (%s) %s',
-                gettype($arg), var_export($arg, true)));
-    }
+        $this->checkClosed();
 
-    /**
-     * @todo test for fencepost errors wrt updating current_index
-     *
-     * @param mixed $len
-     *
-     * @return string bytes read from buffer
-     */
-    public function read($len)
-    {
-        $this->check_closed();
         $read = '';
-
-        for ($i = $this->current_index; $i < ($this->current_index + $len); ++$i) {
-            $read .= $this->string_buffer[$i];
+        for ($i = $this->currentIndex; $i < ($this->currentIndex + $length); ++$i) {
+            $read .= $this->stringBuffer[$i];
         }
-        if (strlen($read) < $len) {
-            $this->current_index = $this->length();
+
+        if (strlen($read) < $length) {
+            $this->currentIndex = $this->length();
         } else {
-            $this->current_index += $len;
+            $this->currentIndex += $length;
         }
 
         return $read;
     }
 
-    /**
-     * @param mixed $offset
-     * @param mixed $whence
-     *
-     * @throws IOException if the seek failed
-     *
-     * @return bool true if successful
-     */
-    public function seek($offset, $whence = self::SEEK_SET)
+    public function write(string $string): int
     {
-        if (!is_int($offset)) {
-            throw new IOException('Seek offset must be an integer.');
+        $this->checkClosed();
+
+        if (!is_string($string)) {
+            throw new IOException(
+                sprintf('write argument must be a string: (%s) %s', gettype($string), var_export($string, true))
+            );
         }
+
+        return $this->appendString($string);
+    }
+
+    public function tell(): int
+    {
+        return $this->currentIndex;
+    }
+
+    public function seek(int $offset, int $whence = self::SEEK_SET): bool
+    {
         // Prevent seeking before BOF
         switch ($whence) {
             case self::SEEK_SET:
                 if (0 > $offset) {
                     throw new IOException('Cannot seek before beginning of file.');
                 }
-                $this->current_index = $offset;
+                $this->currentIndex = $offset;
                 break;
             case self::SEEK_CUR:
-                if (0 > $this->current_index + $whence) {
+                if (0 > $this->currentIndex + $whence) {
                     throw new IOException('Cannot seek before beginning of file.');
                 }
-                $this->current_index += $offset;
+                $this->currentIndex += $offset;
                 break;
             case self::SEEK_END:
                 if (0 > $this->length() + $offset) {
                     throw new IOException('Cannot seek before beginning of file.');
                 }
-                $this->current_index = $this->length() + $offset;
+                $this->currentIndex = $this->length() + $offset;
                 break;
             default:
                 throw new IOException(sprintf('Invalid seek whence %d', $whence));
@@ -136,118 +95,70 @@ class StringIO implements IO
         return true;
     }
 
-    /**
-     * @return int
-     *
-     * @see IO::tell()
-     */
-    public function tell()
-    {
-        return $this->current_index;
-    }
-
-    /**
-     * @return bool
-     *
-     * @see IO::is_eof()
-     */
-    public function is_eof()
-    {
-        return $this->current_index >= $this->length();
-    }
-
-    /**
-     * No-op provided for compatibility with IO interface.
-     *
-     * @return bool true
-     */
-    public function flush()
+    public function flush(): bool
     {
         return true;
     }
 
-    /**
-     * Marks this buffer as closed.
-     *
-     * @return bool true
-     */
-    public function close()
+    public function isEof(): bool
     {
-        $this->check_closed();
-        $this->is_closed = true;
+        return $this->currentIndex >= $this->length();
+    }
+
+    public function close(): bool
+    {
+        $this->checkClosed();
+        $this->isClosed = true;
 
         return true;
     }
 
     /**
-     * Truncates the truncate buffer to 0 bytes and returns the pointer
-     * to the beginning of the buffer.
-     *
-     * @return bool true
+     * Truncates the truncate buffer to 0 bytes and returns the pointer to the beginning of the buffer.
      */
-    public function truncate()
+    public function truncate(): bool
     {
-        $this->check_closed();
-        $this->string_buffer = '';
-        $this->current_index = 0;
+        $this->checkClosed();
+        $this->stringBuffer = '';
+        $this->currentIndex = 0;
 
         return true;
     }
 
     /**
-     * @return int count of bytes in the buffer
+     * Returns count of bytes in the buffer.
      *
-     * @internal could probably memoize length for performance, but
-     *           no need do this yet
+     * @todo could probably memorize length for performance, but no need do this yet
      */
-    public function length()
+    public function length(): int
     {
-        return strlen($this->string_buffer);
+        return strlen($this->stringBuffer);
     }
 
-    /**
-     * @return string
-     *
-     * @uses \self::__toString()
-     */
-    public function string()
+    public function string(): string
     {
         return $this->__toString();
     }
 
-    /**
-     * @return bool true if this buffer is closed and false
-     *              otherwise
-     */
-    public function is_closed()
+    public function is_closed(): bool
     {
-        return $this->is_closed;
+        return $this->isClosed;
     }
 
-    /**
-     * @throws IOException if the buffer is closed
-     */
-    private function check_closed(): void
+    private function checkClosed(): void
     {
         if ($this->is_closed()) {
             throw new IOException('Buffer is closed');
         }
     }
 
-    /**
-     * Appends bytes to this buffer.
-     *
-     * @param string $str
-     *
-     * @return int count of bytes written
-     */
-    private function append_str($str)
+    private function appendString(string $string): int
     {
-        $this->check_closed();
-        $this->string_buffer .= $str;
-        $len = strlen($str);
-        $this->current_index += $len;
+        $this->checkClosed();
+        $this->stringBuffer .= $string;
+        $length = strlen($string);
+        $this->currentIndex += $length;
 
-        return $len;
+        return $length;
     }
 }

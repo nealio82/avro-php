@@ -2,7 +2,6 @@
 
 namespace Avro\Protocol;
 
-use Avro\Exception\ProtocolParseException;
 use Avro\Schema\NamedSchemata;
 use Avro\Schema\Schema;
 
@@ -11,22 +10,45 @@ use Avro\Schema\Schema;
  */
 class Protocol
 {
-    public $name;
+    /**
+     * @var string
+     */
+    public $protocol;
+
+    /**
+     * @var string
+     */
     public $namespace;
+
+    /**
+     * @var NamedSchemata
+     */
     public $schemata;
 
-    public static function parse($json)
+    /**
+     * @var string
+     */
+    public $name;
+
+    /**
+     * @var null|Schema
+     */
+    public $types;
+
+    /**
+     * @var null|ProtocolMessage[]
+     */
+    public $messages = [];
+
+    public static function parse(string $json): self
     {
-        if (null === $json) {
-            throw new ProtocolParseException("Protocol can't be null");
-        }
-        $protocol = new static();
-        $protocol->real_parse(json_decode($json, true));
+        $protocol = new self();
+        $protocol->realParse(json_decode($json, true));
 
         return $protocol;
     }
 
-    public function real_parse($avro): void
+    private function realParse(array $avro): void
     {
         $this->protocol = $avro['protocol'];
         $this->namespace = $avro['namespace'];
@@ -34,7 +56,7 @@ class Protocol
         $this->name = $avro['protocol'];
 
         if (null !== $avro['types']) {
-            $this->types = Schema::real_parse($avro['types'], $this->namespace, $this->schemata);
+            $this->types = Schema::realParse($avro['types'], $this->namespace, $this->schemata);
         }
 
         if (null !== $avro['messages']) {

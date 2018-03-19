@@ -16,7 +16,7 @@ class PrimitiveSchemaTest extends TestCase
             $schema = Schema::parse($schemaString);
 
             $this->assertTrue($isValid, sprintf("schema_string: %s\n", $schemaString));
-            $this->assertEquals($expectedValue, $schema->to_avro());
+            $this->assertEquals($expectedValue, $schema->toAvro());
         } catch (SchemaParseException $e) {
             $this->assertFalse(
                 $isValid,

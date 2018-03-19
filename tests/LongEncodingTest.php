@@ -11,7 +11,7 @@ class LongEncodingTest extends TestCase
 {
     protected function setUp(): void
     {
-        Avro::check_platform();
+        Avro::checkPlatform();
     }
 
     /**
@@ -47,7 +47,7 @@ class LongEncodingTest extends TestCase
     ): void {
         $this->skipIfNoGmp();
 
-        $lval = gmp_strval(GMP::shift_left($val, $shift));
+        $lval = gmp_strval(GMP::shiftLeft($val, $shift));
         $this->assertBitShift($expectedLval, $lval, 'gmp left shift', $lbin, decbin((int) $lval));
     }
 
@@ -64,7 +64,7 @@ class LongEncodingTest extends TestCase
     ): void {
         $this->skipIfNoGmp();
 
-        $rval = gmp_strval(GMP::shift_right($val, $shift));
+        $rval = gmp_strval(GMP::shiftRight($val, $shift));
         $this->assertBitShift($expectedRval, $rval, 'gmp right shift', $rbin, decbin((int) $rval));
     }
 
@@ -131,7 +131,7 @@ class LongEncodingTest extends TestCase
     public function testEncodeLong(string $value, string $expectedBytes): void
     {
         $this->skip64BitTestOn32Bit();
-        $bytes = IOBinaryEncoder::encode_long($value);
+        $bytes = IOBinaryEncoder::encodeLong($value);
         $this->assertEquals($expectedBytes, $bytes);
     }
 
@@ -141,7 +141,7 @@ class LongEncodingTest extends TestCase
     public function testGmpEncodeLong(string $value, string $expectedBytes): void
     {
         $this->skipIfNoGmp();
-        $bytes = GMP::encode_long($value);
+        $bytes = GMP::encodeLong($value);
         $this->assertEquals($expectedBytes, $bytes);
     }
 
@@ -152,7 +152,7 @@ class LongEncodingTest extends TestCase
     {
         $this->skip64BitTestOn32Bit();
         $array = array_map('ord', str_split($bytes));
-        $value = IOBinaryDecoder::decode_long_from_array($array);
+        $value = IOBinaryDecoder::decodeLongFromArray($array);
         $this->assertEquals($expectedValue, $value);
     }
 
@@ -163,7 +163,7 @@ class LongEncodingTest extends TestCase
     {
         $this->skipIfNoGmp();
         $array = array_map('ord', str_split($bytes));
-        $value = GMP::decode_long_from_array($array);
+        $value = GMP::decodeLongFromArray($array);
         $this->assertEquals($expectedValue, $value);
     }
 

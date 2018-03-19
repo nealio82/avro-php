@@ -8,20 +8,15 @@ namespace Avro\Util;
 class Util
 {
     /**
-     * Determines whether the given array is an associative array
-     * (what is termed a map, hash, or dictionary in other languages)
-     * or a list (an array with monotonically increasing integer indicies
-     * starting with zero).
+     * Determines whether the given array is an associative array or a list.
      *
-     * @param array $ary array to test
-     *
-     * @return true if the array is a list and false otherwise
+     * @param mixed $array
      */
-    public static function is_list($ary)
+    public static function isList($array): bool
     {
-        if (is_array($ary)) {
+        if (is_array($array)) {
             $i = 0;
-            foreach ($ary as $k => $v) {
+            foreach ($array as $k => $v) {
                 if ($i !== $k) {
                     return false;
                 }
@@ -35,14 +30,12 @@ class Util
     }
 
     /**
-     * @param array  $ary
-     * @param string $key
+     * @param mixed $key
      *
-     * @return mixed the value of $ary[$key] if it is set,
-     *               and null otherwise
+     * @return mixed
      */
-    public static function array_value($ary, $key)
+    public static function arrayValue(array $array, $key)
     {
-        return isset($ary[$key]) ? $ary[$key] : null;
+        return $array[$key] ?? null;
     }
 }

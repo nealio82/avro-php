@@ -172,11 +172,11 @@ class FloatIntEncodingTest extends TestCase
     private function assertEncodeValues($type, $val, $bits): void
     {
         if (self::FLOAT_TYPE === $type) {
-            $decoder = [IOBinaryDecoder::class, 'int_bits_to_float'];
-            $encoder = [IOBinaryEncoder::class, 'float_to_int_bits'];
+            $decoder = [IOBinaryDecoder::class, 'intBitsToFloat'];
+            $encoder = [IOBinaryEncoder::class, 'floatToIntBits'];
         } else {
-            $decoder = [IOBinaryDecoder::class, 'long_bits_to_double'];
-            $encoder = [IOBinaryEncoder::class, 'double_to_long_bits'];
+            $decoder = [IOBinaryDecoder::class, 'longBitsToDouble'];
+            $encoder = [IOBinaryEncoder::class, 'doubleToLongBits'];
         }
 
         $decodedBitsValue = $decoder($bits);
@@ -198,8 +198,8 @@ class FloatIntEncodingTest extends TestCase
             sprintf(
                 "%s\n expected: '%s'\n    given: '%s'",
                 'ENCODED VAL',
-                Debug::hex_string($bits),
-                Debug::hex_string($encodedValueBits)
+                Debug::hexString($bits),
+                Debug::hexString($encodedValueBits)
             )
         );
 
@@ -219,11 +219,11 @@ class FloatIntEncodingTest extends TestCase
     private function assertEncodeNanValues($type, $val, $bits): void
     {
         if (self::FLOAT_TYPE === $type) {
-            $decoder = [IOBinaryDecoder::class, 'int_bits_to_float'];
-            $encoder = [IOBinaryEncoder::class, 'float_to_int_bits'];
+            $decoder = [IOBinaryDecoder::class, 'intBitsToFloat'];
+            $encoder = [IOBinaryEncoder::class, 'floatToIntBits'];
         } else {
-            $decoder = [IOBinaryDecoder::class, 'long_bits_to_double'];
-            $encoder = [IOBinaryEncoder::class, 'double_to_long_bits'];
+            $decoder = [IOBinaryDecoder::class, 'longBitsToDouble'];
+            $encoder = [IOBinaryEncoder::class, 'doubleToLongBits'];
         }
 
         $decodedBitsValue = $decoder($bits);
@@ -244,8 +244,8 @@ class FloatIntEncodingTest extends TestCase
             sprintf(
                 "%s\n expected: '%s'\n    given: '%s'",
                 'ENCODED VAL',
-                Debug::hex_string($bits),
-                Debug::hex_string($encodedValueBits)
+                Debug::hexString($bits),
+                Debug::hexString($encodedValueBits)
             )
         );
 

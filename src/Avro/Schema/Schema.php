@@ -7,185 +7,91 @@ use Avro\Util\Util;
 
 class Schema
 {
-    /**
-     * @var int lower bound of integer values: -(1 << 31)
-     */
-    const INT_MIN_VALUE = -2147483648;
-
-    /**
-     * @var int upper bound of integer values: (1 << 31) - 1
-     */
-    const INT_MAX_VALUE = 2147483647;
-
-    /**
-     * @var long lower bound of long values: -(1 << 63)
-     */
-    const LONG_MIN_VALUE = -9223372036854775808;
-
-    /**
-     * @var long upper bound of long values: (1 << 63) - 1
-     */
-    const LONG_MAX_VALUE = 9223372036854775807;
-
-    /**
-     * @var string null schema type name
-     */
-    const NULL_TYPE = 'null';
-
-    /**
-     * @var string boolean schema type name
-     */
-    const BOOLEAN_TYPE = 'boolean';
+    public const NULL_TYPE = 'null';
+    public const BOOLEAN_TYPE = 'boolean';
 
     /**
      * int schema type value is a 32-bit signed int.
-     *
-     * @var string int schema type name
      */
-    const INT_TYPE = 'int';
+    public const INT_TYPE = 'int';
 
     /**
      * long schema type value is a 64-bit signed int.
-     *
-     * @var string long schema type name
      */
-    const LONG_TYPE = 'long';
+    public const LONG_TYPE = 'long';
 
     /**
      * float schema type value is a 32-bit IEEE 754 floating-point number.
-     *
-     * @var string float schema type name
      */
-    const FLOAT_TYPE = 'float';
+    public const FLOAT_TYPE = 'float';
 
     /**
      * double schema type value is a 64-bit IEEE 754 floating-point number.
-     *
-     * @var string double schema type name
      */
-    const DOUBLE_TYPE = 'double';
+    public const DOUBLE_TYPE = 'double';
 
     /**
      * string schema type value is a Unicode character sequence.
-     *
-     * @var string string schema type name
      */
-    const STRING_TYPE = 'string';
+    public const STRING_TYPE = 'string';
 
     /**
      * bytes schema type value is a sequence of 8-bit unsigned bytes.
-     *
-     * @var string bytes schema type name
      */
-    const BYTES_TYPE = 'bytes';
+    public const BYTES_TYPE = 'bytes';
 
     // Complex Types
     // Unnamed Schema
-    /**
-     * @var string array schema type name
-     */
-    const ARRAY_SCHEMA = 'array';
-
-    /**
-     * @var string map schema type name
-     */
-    const MAP_SCHEMA = 'map';
-
-    /**
-     * @var string union schema type name
-     */
-    const UNION_SCHEMA = 'union';
+    public const ARRAY_SCHEMA = 'array';
+    public const MAP_SCHEMA = 'map';
+    public const UNION_SCHEMA = 'union';
 
     /**
      * Unions of error schemas are used by Avro messages.
-     *
-     * @var string error_union schema type name
      */
-    const ERROR_UNION_SCHEMA = 'error_union';
+    public const ERROR_UNION_SCHEMA = 'error_union';
 
     // Named Schema
+    public const ENUM_SCHEMA = 'enum';
+    public const FIXED_SCHEMA = 'fixed';
+    public const RECORD_SCHEMA = 'record';
 
-    /**
-     * @var string enum schema type name
-     */
-    const ENUM_SCHEMA = 'enum';
-
-    /**
-     * @var string fixed schema type name
-     */
-    const FIXED_SCHEMA = 'fixed';
-
-    /**
-     * @var string record schema type name
-     */
-    const RECORD_SCHEMA = 'record';
     // Other Schema
-
-    /**
-     * @var string error schema type name
-     */
-    const ERROR_SCHEMA = 'error';
-
-    /**
-     * @var string request schema type name
-     */
-    const REQUEST_SCHEMA = 'request';
+    public const ERROR_SCHEMA = 'error';
+    public const REQUEST_SCHEMA = 'request';
 
     // Schema attribute names
+    public const TYPE_ATTR = 'type';
+    public const NAME_ATTR = 'name';
+    public const NAMESPACE_ATTR = 'namespace';
+    public const FULLNAME_ATTR = 'fullname';
+    public const SIZE_ATTR = 'size';
+    public const FIELDS_ATTR = 'fields';
+    public const ITEMS_ATTR = 'items';
+    public const SYMBOLS_ATTR = 'symbols';
+    public const VALUES_ATTR = 'values';
+    public const DOC_ATTR = 'doc';
     /**
-     * @var string schema type name attribute name
+     * lower bound of integer values: -(1 << 31).
      */
-    const TYPE_ATTR = 'type';
+    private const INT_MIN_VALUE = -2147483648;
 
     /**
-     * @var string named schema name attribute name
+     * upper bound of integer values: (1 << 31) - 1.
      */
-    const NAME_ATTR = 'name';
+    private const INT_MAX_VALUE = 2147483647;
 
     /**
-     * @var string named schema namespace attribute name
+     * lower bound of long values: -(1 << 63).
      */
-    const NAMESPACE_ATTR = 'namespace';
+    private const LONG_MIN_VALUE = -9223372036854775808;
 
     /**
-     * @var string derived attribute: doesn't appear in schema
+     * upper bound of long values: (1 << 63) - 1.
      */
-    const FULLNAME_ATTR = 'fullname';
+    private const LONG_MAX_VALUE = 9223372036854775807;
 
-    /**
-     * @var string array schema size attribute name
-     */
-    const SIZE_ATTR = 'size';
-
-    /**
-     * @var string record fields attribute name
-     */
-    const FIELDS_ATTR = 'fields';
-
-    /**
-     * @var string array schema items attribute name
-     */
-    const ITEMS_ATTR = 'items';
-
-    /**
-     * @var string enum schema symbols attribute name
-     */
-    const SYMBOLS_ATTR = 'symbols';
-
-    /**
-     * @var string map schema values attribute name
-     */
-    const VALUES_ATTR = 'values';
-
-    /**
-     * @var string document string attribute name
-     */
-    const DOC_ATTR = 'doc';
-
-    /**
-     * @var array list of primitive schema type names
-     */
-    private static $primitive_types = [
+    private static $primitiveTypes = [
         self::NULL_TYPE,
         self::BOOLEAN_TYPE,
         self::STRING_TYPE,
@@ -196,20 +102,14 @@ class Schema
         self::DOUBLE_TYPE,
     ];
 
-    /**
-     * @var array list of named schema type names
-     */
-    private static $named_types = [
+    private static $namedTypes = [
         self::FIXED_SCHEMA,
         self::ENUM_SCHEMA,
         self::RECORD_SCHEMA,
         self::ERROR_SCHEMA,
     ];
 
-    /**
-     * @var array list of names of reserved attributes
-     */
-    private static $reserved_attrs = [
+    private static $reservedAttrs = [
         self::TYPE_ATTR,
         self::NAME_ATTR,
         self::NAMESPACE_ATTR,
@@ -221,8 +121,7 @@ class Schema
     ];
 
     /**
-     * @internal Should only be called from within the constructor of
-     *           a class which extends Schema
+     * @internal Should only be called from within the constructor of a class which extends Schema
      *
      * @param string $type a schema type name
      */
@@ -231,160 +130,100 @@ class Schema
         $this->type = $type;
     }
 
-    /**
-     * @return string the JSON-encoded representation of this Avro schema
-     */
     public function __toString()
     {
-        return json_encode($this->to_avro());
+        return json_encode($this->toAvro());
     }
 
-    /**
-     * @param string $type a schema type name
-     *
-     * @return bool true if the given type name is a named schema type name
-     *              and false otherwise
-     */
-    public static function is_named_type($type)
+    public static function isNamedType(?string $type): bool
     {
-        return in_array($type, self::$named_types);
+        return in_array($type, self::$namedTypes, true);
     }
 
-    /**
-     * @param string $type a schema type name
-     *
-     * @return bool true if the given type name is a primitive schema type
-     *              name and false otherwise
-     */
-    public static function is_primitive_type($type)
+    public static function isPrimitiveType(?string $type): bool
     {
-        return in_array($type, self::$primitive_types);
+        return in_array($type, self::$primitiveTypes, true);
     }
 
-    /**
-     * @param string $type a schema type name
-     *
-     * @return bool true if the given type name is a valid schema type
-     *              name and false otherwise
-     */
-    public static function is_valid_type($type)
+    public static function isValidType(?string $type): bool
     {
-        return self::is_primitive_type($type)
-            || self::is_named_type($type)
+        return self::isPrimitiveType($type)
+            || self::isNamedType($type)
             || in_array($type, [
                 self::ARRAY_SCHEMA,
                 self::MAP_SCHEMA,
                 self::UNION_SCHEMA,
                 self::REQUEST_SCHEMA,
                 self::ERROR_UNION_SCHEMA,
-            ]);
+            ], true);
     }
 
-    /**
-     * @param string $json JSON-encoded schema
-     *
-     * @uses \self::real_parse()
-     *
-     * @return Schema
-     */
-    public static function parse($json)
+    public static function parse(string $json): self
     {
         $schemata = new NamedSchemata();
 
-        return self::real_parse(json_decode($json, true), null, $schemata);
+        return self::realParse(json_decode($json, true), null, $schemata);
     }
 
-    /**
-     * @param mixed         $avro              JSON-decoded schema
-     * @param string        $default_namespace namespace of enclosing schema
-     * @param NamedSchemata &$schemata         reference to named schemas
-     *
-     * @throws SchemaParseException
-     *
-     * @return Schema
-     */
-    public static function real_parse($avro, $default_namespace = null, NamedSchemata &$schemata = null)
+    public static function realParse($avro, ?string $defaultNamespace = null, NamedSchemata &$schemata = null): ?self
     {
         if (null === $schemata) {
             $schemata = new NamedSchemata();
         }
 
         if (is_array($avro)) {
-            $type = Util::array_value($avro, self::TYPE_ATTR);
+            $type = Util::arrayValue($avro, self::TYPE_ATTR);
 
-            if (self::is_primitive_type($type)) {
+            if (self::isPrimitiveType($type)) {
                 return new PrimitiveSchema($type);
-            } elseif (self::is_named_type($type)) {
-                $name = Util::array_value($avro, self::NAME_ATTR);
-                $namespace = Util::array_value($avro, self::NAMESPACE_ATTR);
-                $new_name = new Name($name, $namespace, $default_namespace);
-                $doc = Util::array_value($avro, self::DOC_ATTR);
+            }
+
+            if (self::isNamedType($type)) {
+                $name = Util::arrayValue($avro, self::NAME_ATTR);
+                $namespace = Util::arrayValue($avro, self::NAMESPACE_ATTR);
+                $newName = new Name($name, $namespace, $defaultNamespace);
+                $doc = Util::arrayValue($avro, self::DOC_ATTR);
                 switch ($type) {
                     case self::FIXED_SCHEMA:
-                        $size = Util::array_value($avro, self::SIZE_ATTR);
+                        $size = Util::arrayValue($avro, self::SIZE_ATTR);
 
-                        return new FixedSchema($new_name, $doc,
-                            $size,
-                            $schemata);
+                        return new FixedSchema($newName, $doc, $size, $schemata);
                     case self::ENUM_SCHEMA:
-                        $symbols = Util::array_value($avro, self::SYMBOLS_ATTR);
+                        $symbols = Util::arrayValue($avro, self::SYMBOLS_ATTR);
 
-                        return new EnumSchema($new_name, $doc,
-                            $symbols,
-                            $schemata);
+                        return new EnumSchema($newName, $doc, $symbols, $schemata);
                     case self::RECORD_SCHEMA:
                     case self::ERROR_SCHEMA:
-                        $fields = Util::array_value($avro, self::FIELDS_ATTR);
+                        $fields = Util::arrayValue($avro, self::FIELDS_ATTR);
 
-                        return new RecordSchema($new_name, $doc,
-                            $fields,
-                            $schemata, $type);
+                        return new RecordSchema($newName, $doc, $fields, $schemata, $type);
                     default:
-                        throw new SchemaParseException(
-                            sprintf('Unknown named type: %s', $type));
+                        throw new SchemaParseException(sprintf('Unknown named type: %s', $type));
                 }
-            } elseif (self::is_valid_type($type)) {
+            } elseif (self::isValidType($type)) {
                 switch ($type) {
                     case self::ARRAY_SCHEMA:
-                        return new ArraySchema($avro[self::ITEMS_ATTR],
-                            $default_namespace,
-                            $schemata);
+                        return new ArraySchema($avro[self::ITEMS_ATTR], $defaultNamespace, $schemata);
                     case self::MAP_SCHEMA:
-                        return new MapSchema($avro[self::VALUES_ATTR],
-                            $default_namespace,
-                            $schemata);
+                        return new MapSchema($avro[self::VALUES_ATTR], $defaultNamespace, $schemata);
                     default:
-                        throw new SchemaParseException(
-                            sprintf('Unknown valid type: %s', $type));
+                        throw new SchemaParseException(sprintf('Unknown valid type: %s', $type));
                 }
-            } elseif (!array_key_exists(self::TYPE_ATTR, $avro)
-                && Util::is_list($avro)) {
-                return new UnionSchema($avro, $default_namespace, $schemata);
+            } elseif (!array_key_exists(self::TYPE_ATTR, $avro) && Util::isList($avro)) {
+                return new UnionSchema($avro, $defaultNamespace, $schemata);
             } else {
-                throw new SchemaParseException(sprintf('Undefined type: %s',
-                    $type));
+                throw new SchemaParseException(sprintf('Undefined type: %s', $type));
             }
-        } elseif (self::is_primitive_type($avro)) {
+        } elseif (self::isPrimitiveType($avro)) {
             return new PrimitiveSchema($avro);
         } else {
-            throw new SchemaParseException(
-                sprintf('%s is not a schema we know about.',
-                    print_r($avro, true)));
+            throw new SchemaParseException(sprintf('%s is not a schema we know about.', print_r($avro, true)));
         }
     }
 
-    /**
-     * @param mixed $expected_schema
-     * @param mixed $datum
-     *
-     * @throws SchemaParseException
-     *
-     * @return bool true if $datum is valid for $expected_schema
-     *              and false otherwise
-     */
-    public static function is_valid_datum($expected_schema, $datum)
+    public static function isValidDatum(self $expectedSchema, $datum): ?bool
     {
-        switch ($expected_schema->type) {
+        switch ($expectedSchema->type) {
             case self::NULL_TYPE:
                 return null === $datum;
             case self::BOOLEAN_TYPE:
@@ -393,20 +232,16 @@ class Schema
             case self::BYTES_TYPE:
                 return is_string($datum);
             case self::INT_TYPE:
-                return is_int($datum)
-                    && (self::INT_MIN_VALUE <= $datum)
-                    && ($datum <= self::INT_MAX_VALUE);
+                return is_int($datum) && (self::INT_MIN_VALUE <= $datum) && ($datum <= self::INT_MAX_VALUE);
             case self::LONG_TYPE:
-                return is_int($datum)
-                    && (self::LONG_MIN_VALUE <= $datum)
-                    && ($datum <= self::LONG_MAX_VALUE);
+                return is_int($datum) && (self::LONG_MIN_VALUE <= $datum) && ($datum <= self::LONG_MAX_VALUE);
             case self::FLOAT_TYPE:
             case self::DOUBLE_TYPE:
                 return is_float($datum) || is_int($datum);
             case self::ARRAY_SCHEMA:
                 if (is_array($datum)) {
                     foreach ($datum as $d) {
-                        if (!self::is_valid_datum($expected_schema->items(), $d)) {
+                        if (!self::isValidDatum($expectedSchema->items(), $d)) {
                             return false;
                         }
                     }
@@ -418,8 +253,7 @@ class Schema
             case self::MAP_SCHEMA:
                 if (is_array($datum)) {
                     foreach ($datum as $k => $v) {
-                        if (!is_string($k)
-                            || !self::is_valid_datum($expected_schema->values(), $v)) {
+                        if (!is_string($k) || !self::isValidDatum($expectedSchema->values(), $v)) {
                             return false;
                         }
                     }
@@ -429,90 +263,64 @@ class Schema
 
                 return false;
             case self::UNION_SCHEMA:
-                foreach ($expected_schema->schemas() as $schema) {
-                    if (self::is_valid_datum($schema, $datum)) {
+                foreach ($expectedSchema->schemas() as $schema) {
+                    if (self::isValidDatum($schema, $datum)) {
                         return true;
                     }
                 }
 
                 return false;
             case self::ENUM_SCHEMA:
-                return in_array($datum, $expected_schema->symbols());
+                return in_array($datum, $expectedSchema->symbols(), true);
             case self::FIXED_SCHEMA:
-                return is_string($datum)
-                    && (strlen($datum) == $expected_schema->size());
+                return is_string($datum) && strlen($datum) === $expectedSchema->size();
             case self::RECORD_SCHEMA:
             case self::ERROR_SCHEMA:
             case self::REQUEST_SCHEMA:
                 if (is_array($datum)) {
-                    foreach ($expected_schema->fields() as $field) {
-                        if ($field->has_default_value() && !isset($datum[$field->name()])) {
-                            $value = $field->default_value();
+                    foreach ($expectedSchema->fields() as $field) {
+                        if ($field->hasDefaultValue() && !isset($datum[$field->name()])) {
+                            $value = $field->defaultValue();
                         } else {
                             $value = $datum[$field->name()];
                         }
                     }
-                    if ((!$field->has_default_value() && !array_key_exists($field->name(), $datum)) || !self::is_valid_datum($field->type(), $value)) {
-                        return false;
-                    }
 
-                    return true;
+                    return !((!$field->hasDefaultValue() && !array_key_exists($field->name(), $datum))
+                        || !self::isValidDatum($field->type(), $value));
                 }
 
                 return false;
             default:
-                throw new SchemaParseException(
-                    sprintf('%s is not allowed.', $expected_schema));
+                throw new SchemaParseException(sprintf('%s is not allowed.', $expectedSchema));
         }
     }
 
-    /**
-     * @return string schema type name of this schema
-     */
     public function type()
     {
         return $this->type;
     }
 
-    /**
-     * @return mixed
-     */
-    public function to_avro()
+    public function toAvro()
     {
         return [self::TYPE_ATTR => $this->type];
     }
 
-    /**
-     * @param mixed $attribute
-     *
-     * @return mixed value of the attribute with the given attribute name
-     */
-    public function attribute($attribute)
+    public function attribute(string $attribute): string
     {
         return $this->$attribute();
     }
 
-    /**
-     * @param mixed         $avro
-     * @param string        $default_namespace namespace of enclosing schema
-     * @param NamedSchemata &$schemata
-     *
-     * @throws SchemaParseException
-     *
-     * @return Schema
-     *
-     * @uses \Schema::real_parse()
-     */
-    protected static function subparse($avro, $default_namespace, NamedSchemata &$schemata = null)
+    protected static function subparse($avro, ?string $defaultNamespace, NamedSchemata &$schemata = null): ?self
     {
         try {
-            return self::real_parse($avro, $default_namespace, $schemata);
+            return self::realParse($avro, $defaultNamespace, $schemata);
         } catch (SchemaParseException $e) {
             throw $e;
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             throw new SchemaParseException(
-                sprintf('Sub-schema is not a valid Avro schema. Bad schema: %s',
-                    print_r($avro, true)));
+                sprintf('Sub-schema is not a valid Avro schema. Bad schema: %s', print_r($avro, true))
+            );
         }
     }
 }

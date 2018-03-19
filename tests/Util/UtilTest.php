@@ -13,7 +13,7 @@ class UtilTest extends TestCase
      */
     public function testIsList($actual, bool $expected): void
     {
-        $this->assertSame($expected, Util::is_list($actual));
+        $this->assertSame($expected, Util::isList($actual));
     }
 
     public function getLists(): iterable
@@ -35,7 +35,7 @@ class UtilTest extends TestCase
      */
     public function testArrayValue($array, $key, $expected): void
     {
-        $this->assertSame($expected, Util::array_value($array, $key));
+        $this->assertSame($expected, Util::arrayValue($array, $key));
     }
 
     public function getArrayValues(): iterable

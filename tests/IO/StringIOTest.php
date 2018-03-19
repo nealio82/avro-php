@@ -30,7 +30,7 @@ class StringIOTest extends TestCase
         $dataIOWriter = new DataIOWriter($stringIO, $IODatumWriter, $writersSchema);
         $dataIOWriter->close();
 
-        $this->assertSame(57, $stringIO->length(), Debug::ascii_string($stringIO->string()));
+        $this->assertSame(57, $stringIO->length(), Debug::asciiString($stringIO->string()));
 
         $readStringIO = new StringIO($stringIO->string());
 
@@ -41,7 +41,7 @@ class StringIOTest extends TestCase
         $this->assertSame(0, $datumCount);
 
         $this->assertTrue($readStringIO->truncate());
-        $this->assertSame(0, $readStringIO->length(), Debug::ascii_string($readStringIO->string()));
+        $this->assertSame(0, $readStringIO->length(), Debug::asciiString($readStringIO->string()));
 
         $readStringIO->close();
         try {

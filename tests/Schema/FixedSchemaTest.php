@@ -16,7 +16,7 @@ class FixedSchemaTest extends TestCase
             $schema = Schema::parse($schemaString);
 
             $this->assertTrue($isValid, sprintf("schema_string: %s\n", $schemaString));
-            $this->assertEquals(json_decode($expectedValue ?: $schemaString, true), $schema->to_avro());
+            $this->assertEquals(json_decode($expectedValue ?: $schemaString, true), $schema->toAvro());
         } catch (SchemaParseException $e) {
             $this->assertFalse(
                 $isValid,
@@ -31,7 +31,9 @@ class FixedSchemaTest extends TestCase
         yield ['{"type": "fixed", "name": "Test", "size": 1}', true, null];
         yield ['{"type": "fixed", "name": "MyFixed", "namespace": "org.apache.hadoop.avro", "size": 1}', true, null];
         yield ['{"type": "fixed", "name": "Missing size"}', false, null];
-        yield ['{"type": "fixed", "size": 314}', false, null];
+        yield ['{"type": "fixed", "name": "Wrong size format", "size": "1"}', false, null];
+        yield ['{"type": "fixed", "name": "Wrong size format", "size": "a"}', false, null];
+        yield ['{"type": "fixed", "name": "Empty size", "size": null}', false, null];
         yield ['{"type":"fixed","name":"ex","doc":"this should be ignored","size": 314}', true, '{"type":"fixed","name":"ex","size":314}'];
         yield ['{"name": "bar", "namespace": "com.example", "type": "fixed", "size": 32 }', true, '{"type":"fixed","name":"bar","namespace":"com.example","size":32}'];
         yield ['{"name": "com.example.bar", "type": "fixed", "size": 32 }', true, '{"type":"fixed","name":"bar","namespace":"com.example","size":32}'];

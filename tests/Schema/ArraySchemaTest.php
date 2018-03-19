@@ -16,7 +16,7 @@ class ArraySchemaTest extends TestCase
             $schema = Schema::parse($schemaString);
 
             $this->assertTrue($isValid, sprintf("schema_string: %s\n", $schemaString));
-            $this->assertEquals(json_decode($schemaString, true), $schema->to_avro());
+            $this->assertEquals(json_decode($schemaString, true), $schema->toAvro());
         } catch (SchemaParseException $e) {
             $this->assertFalse(
                 $isValid,

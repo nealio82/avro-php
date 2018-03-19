@@ -8,93 +8,69 @@ use Avro\Util\Util;
 
 class EnumSchema extends NamedSchema
 {
-    /**
-     * @var string[] array of symbols
-     */
     private $symbols;
 
     /**
-     * @param Name          $name
-     * @param string        $doc
-     * @param string[]      $symbols
-     * @param NamedSchemata &$schemata
-     *
-     * @throws SchemaParseException
+     * @param string[] $symbols
      */
-    public function __construct(Name $name, $doc, $symbols, NamedSchemata &$schemata = null)
+    public function __construct(Name $name, ?string $doc, array $symbols, NamedSchemata &$schemata = null)
     {
-        if (!Util::is_list($symbols)) {
+        if (!Util::isList($symbols)) {
             throw new SchemaParseException('Enum Schema symbols are not a list');
         }
+
         if (count(array_unique($symbols)) > count($symbols)) {
-            throw new SchemaParseException(
-                sprintf('Duplicate symbols: %s', $symbols));
+            throw new SchemaParseException(sprintf('Duplicate symbols: %s', $symbols));
         }
 
         foreach ($symbols as $symbol) {
             if (!is_string($symbol) || empty($symbol)) {
                 throw new SchemaParseException(
-                    sprintf('Enum schema symbol must be a string %',
-                        print_r($symbol, true)));
+                    sprintf('Enum schema symbol must be a string %s', print_r($symbol, true))
+                );
             }
         }
 
         parent::__construct(Schema::ENUM_SCHEMA, $name, $doc, $schemata);
+
         $this->symbols = $symbols;
     }
 
     /**
-     * @return string[] this enum schema's symbols
+     * @return string[]
      */
-    public function symbols()
+    public function symbols(): array
     {
         return $this->symbols;
     }
 
-    /**
-     * @param string $symbol
-     *
-     * @return bool true if the given symbol exists in this
-     *              enum schema and false otherwise
-     */
-    public function has_symbol($symbol)
+    public function hasSymbol(string $symbol): bool
     {
-        return in_array($symbol, $this->symbols);
+        return in_array($symbol, $this->symbols, true);
     }
 
-    /**
-     * @param int $index
-     *
-     * @return string enum schema symbol with the given (zero-based) index
-     */
-    public function symbol_by_index($index)
+    public function symbolByIndex(int $index): string
     {
-        if (array_key_exists($index, $this->symbols)) {
-            return $this->symbols[$index];
+        if (!array_key_exists($index, $this->symbols)) {
+            throw new Exception(sprintf('Invalid symbol index %d', $index));
         }
-        throw new Exception(sprintf('Invalid symbol index %d', $index));
+
+        return $this->symbols[$index];
     }
 
-    /**
-     * @param string $symbol
-     *
-     * @return int the index of the given $symbol in the enum schema
-     */
-    public function symbol_index($symbol)
+    public function symbolIndex(string $symbol): int
     {
         $idx = array_search($symbol, $this->symbols, true);
-        if (false !== $idx) {
-            return $idx;
+        if (false === $idx) {
+            throw new Exception(sprintf('Invalid symbol value "%s"', $symbol));
         }
-        throw new Exception(sprintf("Invalid symbol value '%s'", $symbol));
+
+        return $idx;
     }
 
-    /**
-     * @return mixed
-     */
-    public function to_avro()
+    public function toAvro(): array
     {
-        $avro = parent::to_avro();
+        $avro = parent::toAvro();
         $avro[Schema::SYMBOLS_ATTR] = $this->symbols;
 
         return $avro;

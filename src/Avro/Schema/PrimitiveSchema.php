@@ -10,28 +10,22 @@ use Avro\Exception\SchemaParseException;
 class PrimitiveSchema extends Schema
 {
     /**
-     * @param string $type the primitive schema type name
-     *
-     * @throws SchemaParseException if the given $type is not a
-     *                              primitive schema type name
+     * @param mixed $type
      */
     public function __construct($type)
     {
-        if (self::is_primitive_type($type)) {
-            return parent::__construct($type);
+        if (!self::isPrimitiveType($type)) {
+            throw new SchemaParseException(sprintf('%s is not a valid primitive type.', $type));
         }
-        throw new SchemaParseException(
-            sprintf('%s is not a valid primitive type.', $type));
+
+        parent::__construct($type);
     }
 
-    /**
-     * @return mixed
-     */
-    public function to_avro()
+    public function toAvro()
     {
-        $avro = parent::to_avro();
-        // FIXME: Is this if really necessary? When *wouldn't* this be the case?
-        if (1 == count($avro)) {
+        $avro = parent::toAvro();
+        // @todo Is this if really necessary? When *wouldn't* this be the case?
+        if (1 === count($avro)) {
             return $this->type;
         }
 

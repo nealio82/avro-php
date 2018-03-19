@@ -9,111 +9,61 @@ use Avro\Exception\SchemaParseException;
  */
 class Field extends Schema
 {
-    /**
-     * @var string fields name attribute name
-     */
-    const FIELD_NAME_ATTR = 'name';
+    public const FIELD_NAME_ATTR = 'name';
+    public const DEFAULT_ATTR = 'default';
+    public const ORDER_ATTR = 'order';
 
-    /**
-     * @var string
-     */
-    const DEFAULT_ATTR = 'default';
+    private const ASC_SORT_ORDER = 'ascending';
+    private const DESC_SORT_ORDER = 'descending';
+    private const IGNORE_SORT_ORDER = 'ignore';
 
-    /**
-     * @var string
-     */
-    const ORDER_ATTR = 'order';
-
-    /**
-     * @var string
-     */
-    const ASC_SORT_ORDER = 'ascending';
-
-    /**
-     * @var string
-     */
-    const DESC_SORT_ORDER = 'descending';
-
-    /**
-     * @var string
-     */
-    const IGNORE_SORT_ORDER = 'ignore';
-
-    /**
-     * @var array list of valid field sort order values
-     */
-    private static $valid_field_sort_orders = [
+    private static $validFieldSortOrders = [
         self::ASC_SORT_ORDER,
         self::DESC_SORT_ORDER,
         self::IGNORE_SORT_ORDER,
     ];
 
-    /**
-     * @var string
-     */
     private $name;
-
-    /**
-     * @var bool whether or no there is a default value
-     */
-    private $has_default;
-
-    /**
-     * @var string field default value
-     */
+    private $hasDefault;
     private $default;
-
-    /**
-     * @var string sort order of this field
-     */
     private $order;
+    private $isTypeFromSchemata;
 
     /**
-     * @var bool whether or not the NamedSchema of this field is
-     *           defined in the NamedSchemata instance
-     */
-    private $is_type_from_schemata;
-
-    /**
-     * @param string $type
-     * @param string $name
-     * @param Schema $schema
-     * @param bool   $is_type_from_schemata
-     * @param string $default
-     * @param string $order
-     * @param mixed  $has_default
+     * @param mixed $default
      *
      * @todo Check validity of $default value
      * @todo Check validity of $order value
      */
-    public function __construct($name, Schema $schema, $is_type_from_schemata,
-                                $has_default, $default, $order = null)
-    {
-        if (!Name::is_well_formed_name($name)) {
+    public function __construct(
+        string $name,
+        Schema $schema,
+        bool $isTypeFromSchemata,
+        bool $hasDefault,
+        $default,
+        ?string $order = null
+    ) {
+        if (!Name::isWellFormedName($name)) {
             throw new SchemaParseException('Field requires a "name" attribute');
         }
-        $this->type = $schema;
-        $this->is_type_from_schemata = $is_type_from_schemata;
+
+        parent::__construct($schema);
+
         $this->name = $name;
-        $this->has_default = $has_default;
-        if ($this->has_default) {
-            $this->default = $default;
-        }
-        $this->check_order_value($order);
+        $this->isTypeFromSchemata = $isTypeFromSchemata;
+        $this->hasDefault = $hasDefault;
+        $this->default = $default;
+        $this->checkOrderValue($order);
         $this->order = $order;
     }
 
-    /**
-     * @return mixed
-     */
-    public function to_avro()
+    public function toAvro(): array
     {
         $avro = [self::FIELD_NAME_ATTR => $this->name];
 
-        $avro[Schema::TYPE_ATTR] = ($this->is_type_from_schemata)
-            ? $this->type->qualified_name() : $this->type->to_avro();
+        $avro[Schema::TYPE_ATTR] = $this->isTypeFromSchemata ? $this->type->getQualifiedName() : $this->type->toAvro();
 
-        if ($this->has_default) {
+        if ($this->hasDefault) {
             $avro[self::DEFAULT_ATTR] = $this->default;
         }
 
@@ -124,51 +74,25 @@ class Field extends Schema
         return $avro;
     }
 
-    /**
-     * @return string the name of this field
-     */
-    public function name()
+    public function name(): string
     {
         return $this->name;
     }
 
-    /**
-     * @return mixed the default value of this field
-     */
-    public function default_value()
+    public function defaultValue()
     {
         return $this->default;
     }
 
-    /**
-     * @return bool true if the field has a default and false otherwise
-     */
-    public function has_default_value()
+    public function hasDefaultValue(): bool
     {
-        return $this->has_default;
+        return $this->hasDefault;
     }
 
-    /**
-     * @param string $order
-     *
-     * @return bool
-     */
-    private static function is_valid_field_sort_order($order)
+    private function checkOrderValue(?string $order): void
     {
-        return in_array($order, self::$valid_field_sort_orders);
-    }
-
-    /**
-     * @param string $order
-     *
-     * @throws SchemaParseException if $order is not a valid
-     *                              field order value
-     */
-    private static function check_order_value($order): void
-    {
-        if (null !== $order && !self::is_valid_field_sort_order($order)) {
-            throw new SchemaParseException(
-                sprintf('Invalid field sort order %s', $order));
+        if (null !== $order && !in_array($order, self::$validFieldSortOrders, true)) {
+            throw new SchemaParseException(sprintf('Invalid field sort order %s', $order));
         }
     }
 }

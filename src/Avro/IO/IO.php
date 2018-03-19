@@ -2,96 +2,54 @@
 
 namespace Avro\IO;
 
-use Avro\Exception\IOException;
-
 /**
- * Barebones IO base class to provide common interface for file and string
- * access within the Avro classes.
+ * Barebones IO base class to provide common interface for file and string access within the Avro classes.
  */
 interface IO
 {
-    /**
-     * @var string general read mode
-     */
-    const READ_MODE = 'r';
-    /**
-     * @var string general write mode
-     */
-    const WRITE_MODE = 'w';
+    public const READ_MODE = 'r';
+    public const WRITE_MODE = 'w';
+
+    // Set position equal to offset bytes
+    public const SEEK_CUR = SEEK_CUR;
+    // Set position to current index + offset bytes
+    public const SEEK_SET = SEEK_SET;
+    // Set position to end of file + offset bytes
+    public const SEEK_END = SEEK_END;
 
     /**
-     * @var int set position equal to offset bytes
+     * Read $length bytes from IO instance.
      */
-    const SEEK_CUR = SEEK_CUR;
-    /**
-     * @var int set position to current index + offset bytes
-     */
-    const SEEK_SET = SEEK_SET;
-    /**
-     * @var int set position to end of file + offset bytes
-     */
-    const SEEK_END = SEEK_END;
+    public function read(int $length): string;
 
     /**
-     * Read $len bytes from IO instance.
-     *
-     * @param int $len
-     *
-     * @return string bytes read
+     * Append $argument bytes to this buffer and returns the count of bytes written.
      */
-    public function read($len);
-
-    /**
-     * Append bytes to this buffer.
-     *
-     * @param string $arg bytes to write
-     *
-     * @throws IOException if $args is not a string value
-     *
-     * @return int count of bytes written
-     */
-    public function write($arg);
+    public function write(string $string): int;
 
     /**
      * Return byte offset within IO instance.
-     *
-     * @return int
      */
-    public function tell();
+    public function tell(): int;
 
     /**
-     * Set the position indicator. The new position, measured in bytes
-     * from the beginning of the file, is obtained by adding $offset to
-     * the position specified by $whence.
-     *
-     * @param int $offset
-     * @param int $whence one of AvroIO::SEEK_SET, AvroIO::SEEK_CUR,
-     *                    or Avro::SEEK_END
-     *
-     * @return bool true
+     * Set the position indicator. The new position, measured in bytes from the beginning of the file,
+     * is obtained by adding $offset to the position specified by $whence.
      */
-    public function seek($offset, $whence = self::SEEK_SET);
+    public function seek(int $offset, int $whence = self::SEEK_SET): bool;
 
     /**
      * Flushes any buffered data to the IO object.
-     *
-     * @return bool true upon success
      */
-    public function flush();
+    public function flush(): bool;
 
     /**
-     * Returns whether or not the current position at the end of this IO
-     * instance.
-     * Note is_eof() is <b>not</b> like eof in C or feof in PHP:
-     * it returns TRUE if the *next* read would be end of file,
-     * rather than if the *most recent* read read end of file.
-     *
-     * @return bool true if at the end of file, and false otherwise
+     * Returns whether or not the current position at the end of this IO instance.
      */
-    public function is_eof();
+    public function isEof(): bool;
 
     /**
      * Closes this IO instance.
      */
-    public function close();
+    public function close(): bool;
 }

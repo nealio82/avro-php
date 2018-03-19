@@ -5,59 +5,51 @@ namespace Avro\Schema;
 use Avro\Exception\SchemaParseException;
 
 /**
- * Union of Avro schemas, of which values can be of any of the schema in
- * the union.
+ * Union of Avro schemas, of which values can be of any of the schema in the union.
  */
 class UnionSchema extends Schema
 {
     /**
-     * @var int[] list of indices of named schemas which
-     *            are defined in $schemata
+     * @var int[] list of indices of named schemas which are defined in
      */
-    public $schema_from_schemata_indices;
-    /**
-     * @var Schema[] list of schemas of this union
-     */
+    public $schemaFromSchemataIndices;
     private $schemas;
 
     /**
-     * @param Schema[]      $schemas           list of schemas in the union
-     * @param string        $default_namespace namespace of enclosing schema
-     * @param NamedSchemata &$schemata
+     * @param Schema[] $schemas
      */
-    public function __construct($schemas, $default_namespace, NamedSchemata &$schemata = null)
+    public function __construct(array $schemas, ?string $defaultNamespace, NamedSchemata &$schemata = null)
     {
         parent::__construct(Schema::UNION_SCHEMA);
 
-        $this->schema_from_schemata_indices = [];
-        $schema_types = [];
+        $this->schemaFromSchemataIndices = [];
+        $schemaTypes = [];
         foreach ($schemas as $index => $schema) {
-            $is_schema_from_schemata = false;
-            $new_schema = null;
+            $isSchemaFromSchemata = false;
+            $newSchema = null;
             if (is_string($schema)
-                && ($new_schema = $schemata->schema_by_name(
-                    new Name($schema, null, $default_namespace)))
+                && ($newSchema = $schemata->schemaByName(new Name($schema, null, $defaultNamespace)))
             ) {
-                $is_schema_from_schemata = true;
+                $isSchemaFromSchemata = true;
             } else {
-                $new_schema = self::subparse($schema, $default_namespace, $schemata);
+                $newSchema = self::subparse($schema, $defaultNamespace, $schemata);
             }
 
-            $schema_type = $new_schema->type;
-            if (self::is_valid_type($schema_type)
-                && !self::is_named_type($schema_type)
-                && in_array($schema_type, $schema_types)
+            $schemaType = $newSchema->type;
+            if (self::isValidType($schemaType) && !self::isNamedType($schemaType)
+                && in_array($schemaType, $schemaTypes, true)
             ) {
-                throw new SchemaParseException(
-                    sprintf('"%s" is already in union', $schema_type));
-            } elseif (Schema::UNION_SCHEMA == $schema_type) {
+                throw new SchemaParseException(sprintf('"%s" is already in union', $schemaType));
+            }
+
+            if (Schema::UNION_SCHEMA === $schemaType) {
                 throw new SchemaParseException('Unions cannot contain other unions');
-            } else {
-                $schema_types[] = $schema_type;
-                $this->schemas[] = $new_schema;
-                if ($is_schema_from_schemata) {
-                    $this->schema_from_schemata_indices[] = $index;
-                }
+            }
+
+            $schemaTypes[] = $schemaType;
+            $this->schemas[] = $newSchema;
+            if ($isSchemaFromSchemata) {
+                $this->schemaFromSchemataIndices[] = $index;
             }
         }
     }
@@ -65,38 +57,30 @@ class UnionSchema extends Schema
     /**
      * @return Schema[]
      */
-    public function schemas()
+    public function schemas(): array
     {
         return $this->schemas;
     }
 
-    /**
-     * @param mixed $index
-     *
-     * @throws SchemaParseException if the index is invalid for this schema
-     *
-     * @return Schema the particular schema from the union for
-     *                the given (zero-based) index
-     */
-    public function schema_by_index($index)
+    public function schemaByIndex(int $index): Schema
     {
-        if (count($this->schemas) > $index) {
-            return $this->schemas[$index];
+        if (count($this->schemas) <= $index) {
+            throw new SchemaParseException('Invalid union schema index');
         }
 
-        throw new SchemaParseException('Invalid union schema index');
+        return $this->schemas[$index];
     }
 
-    /**
-     * @return mixed
-     */
-    public function to_avro()
+    public function toAvro(): array
     {
         $avro = [];
 
         foreach ($this->schemas as $index => $schema) {
-            $avro[] = (in_array($index, $this->schema_from_schemata_indices))
-                ? $schema->qualified_name() : $schema->to_avro();
+            if (in_array($index, $this->schemaFromSchemataIndices, true)) {
+                $avro[] = $schema->getQualifiedName();
+            } else {
+                $avro[] = $schema->toAvro();
+            }
         }
 
         return $avro;

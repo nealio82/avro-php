@@ -7,14 +7,10 @@ use Avro\GMP\GMP;
 use Avro\IO\IO;
 
 /**
- * Decodes and reads Avro data from an IO object encoded using
- * Avro binary encoding.
+ * Decodes and reads Avro data from an IO object encoded using Avro binary encoding.
  */
 class IOBinaryDecoder
 {
-    /**
-     * @var IO
-     */
     private $io;
 
     /**
@@ -22,43 +18,35 @@ class IOBinaryDecoder
      */
     public function __construct(IO $io)
     {
-        Avro::check_platform();
+        Avro::checkPlatform();
         $this->io = $io;
     }
 
     /**
-     * @param int[] array of byte ascii values
-     * @param mixed $bytes
-     *
-     * @return long decoded value
-     *
      * @internal Requires 64-bit platform
+     *
+     * @param int[] $bytes array of byte ascii values
      */
-    public static function decode_long_from_array($bytes)
+    public static function decodeLongFromArray(array $bytes): int
     {
-        $b = array_shift($bytes);
-        $n = $b & 0x7f;
+        $byte = array_shift($bytes);
+        $number = $byte & 0x7f;
         $shift = 7;
-        while (0 != ($b & 0x80)) {
-            $b = array_shift($bytes);
-            $n |= (($b & 0x7f) << $shift);
+        while (0 !== ($byte & 0x80)) {
+            $byte = array_shift($bytes);
+            $number |= (($byte & 0x7f) << $shift);
             $shift += 7;
         }
 
-        return ($n >> 1) ^ -($n & 1);
+        return ($number >> 1) ^ -($number & 1);
     }
 
     /**
      * Performs decoding of the binary string to a float value.
      *
-     * XXX: This is <b>not</b> endian-aware! See comments in
-     * {@link IOBinaryEncoder::float_to_int_bits()} for details.
-     *
-     * @param string $bits
-     *
-     * @return float
+     * This is <b>not</b> endian-aware! See comments in {@link IOBinaryEncoder::float_to_int_bits()} for details.
      */
-    public static function int_bits_to_float($bits)
+    public static function intBitsToFloat(string $bits): float
     {
         $float = unpack('f', $bits);
 
@@ -68,188 +56,133 @@ class IOBinaryDecoder
     /**
      * Performs decoding of the binary string to a double value.
      *
-     * XXX: This is <b>not</b> endian-aware! See comments in
-     * {@link IOBinaryEncoder::float_to_int_bits()} for details.
-     *
-     * @param string $bits
-     *
-     * @return float
+     * This is <b>not</b> endian-aware! See comments in {@link IOBinaryEncoder::float_to_int_bits()} for details.
      */
-    public static function long_bits_to_double($bits)
+    public static function longBitsToDouble(string $bits): float
     {
         $double = unpack('d', $bits);
 
         return (float) $double[1];
     }
 
-    public function read_null()
+    public function readNull()
     {
         return null;
     }
 
-    /**
-     * @return bool
-     */
-    public function read_boolean()
+    public function readBoolean(): bool
     {
-        return (bool) (1 == ord($this->next_byte()));
+        return 1 === ord($this->nextByte());
     }
 
-    /**
-     * @return int
-     */
-    public function read_int()
+    public function readInt(): int
     {
-        return (int) $this->read_long();
+        return $this->readLong();
     }
 
-    /**
-     * @return long
-     */
-    public function read_long()
+    public function readLong(): int
     {
-        $byte = ord($this->next_byte());
+        $byte = ord($this->nextByte());
         $bytes = [$byte];
 
-        while (0 != ($byte & 0x80)) {
-            $byte = ord($this->next_byte());
+        while (0 !== ($byte & 0x80)) {
+            $byte = ord($this->nextByte());
             $bytes[] = $byte;
         }
 
-        if (Avro::uses_gmp()) {
-            return GMP::decode_long_from_array($bytes);
+        if (Avro::usesGmp()) {
+            return GMP::decodeLongFromArray($bytes);
         }
 
-        return self::decode_long_from_array($bytes);
+        return self::decodeLongFromArray($bytes);
+    }
+
+    public function readFloat(): float
+    {
+        return self::intBitsToFloat($this->read(4));
+    }
+
+    public function readDouble(): float
+    {
+        return self::longBitsToDouble($this->read(8));
     }
 
     /**
-     * @return float
+     * A string is encoded as a long followed by that many bytes of UTF-8 encoded character data.
      */
-    public function read_float()
+    public function readString(): string
     {
-        return self::int_bits_to_float($this->read(4));
+        return $this->readBytes();
     }
 
-    /**
-     * @return float
-     */
-    public function read_double()
+    public function readBytes(): string
     {
-        return self::long_bits_to_double($this->read(8));
+        return $this->read($this->readLong());
     }
 
-    /**
-     * A string is encoded as a long followed by that many bytes
-     * of UTF-8 encoded character data.
-     *
-     * @return string
-     */
-    public function read_string()
+    public function read(int $length): string
     {
-        return $this->read_bytes();
+        return $this->io->read($length);
     }
 
-    /**
-     * @return string
-     */
-    public function read_bytes()
+    public function skipNull(): void
     {
-        return $this->read($this->read_long());
     }
 
-    /**
-     * @param int $len count of bytes to read
-     *
-     * @return string
-     */
-    public function read($len)
+    public function skipBoolean(): void
     {
-        return $this->io->read($len);
+        $this->skip(1);
     }
 
-    public function skip_null()
+    public function skipInt(): void
     {
-        return null;
+        $this->skipLong();
     }
 
-    public function skip_boolean()
+    public function skipLong(): void
     {
-        return $this->skip(1);
-    }
-
-    public function skip_int()
-    {
-        return $this->skip_long();
-    }
-
-    public function skip_long(): void
-    {
-        $b = ord($this->next_byte());
-        while (0 != ($b & 0x80)) {
-            $b = $this->next_byte();
+        $byte = ord($this->nextByte());
+        while (0 !== ($byte & 0x80)) {
+            $byte = $this->nextByte();
         }
     }
 
-    public function skip_float()
+    public function skipFloat(): void
     {
-        return $this->skip(4);
+        $this->skip(4);
     }
 
-    public function skip_double()
+    public function skipDouble(): void
     {
-        return $this->skip(8);
+        $this->skip(8);
     }
 
-    public function skip_bytes()
+    public function skipBytes(): void
     {
-        return $this->skip($this->read_long());
+        $this->skip($this->readLong());
     }
 
-    public function skip_string()
+    public function skipString(): void
     {
-        return $this->skip_bytes();
+        $this->skipBytes();
     }
 
-    /**
-     * @param int $len count of bytes to skip
-     *
-     * @uses \IO::seek()
-     */
-    public function skip($len): void
+    public function skip(int $length): void
     {
-        $this->seek($len, IO::SEEK_CUR);
+        $this->seek($length, IO::SEEK_CUR);
     }
 
-    /**
-     * @throws Exception if the next byte cannot be read
-     *
-     * @return string the next byte from $this->io
-     */
-    private function next_byte()
+    private function nextByte(): string
     {
         return $this->read(1);
     }
 
-    /**
-     * @return int position of pointer in IO instance
-     *
-     * @uses \IO::tell()
-     */
-    private function tell()
+    private function tell(): int
     {
         return $this->io->tell();
     }
 
-    /**
-     * @param int $offset
-     * @param int $whence
-     *
-     * @return bool true upon success
-     *
-     * @uses \IO::seek()
-     */
-    private function seek($offset, $whence)
+    private function seek(int $offset, int $whence): bool
     {
         return $this->io->seek($offset, $whence);
     }

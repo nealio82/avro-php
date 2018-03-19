@@ -8,113 +8,89 @@ use Avro\Util\Util;
 class RecordSchema extends NamedSchema
 {
     /**
-     * @var Schema[] array of NamedSchema field definitions of
-     *               this RecordSchema
+     * @var Schema[]
      */
     private $fields;
 
     /**
      * @var array map of field names to field objects
      *
-     * @internal Not called directly. Memoization of RecordSchema->fields_hash()
+     * @internal Not called directly. Memoization of RecordSchema->fieldsHash()
      */
-    private $fields_hash;
+    private $fieldsHash;
 
-    /**
-     * @param string        $name
-     * @param string        $namespace
-     * @param string        $doc
-     * @param array         $fields
-     * @param NamedSchemata &$schemata
-     * @param string        $schema_type schema type name
-     *
-     * @throws SchemaParseException
-     */
-    public function __construct($name, $doc, $fields, NamedSchemata &$schemata = null,
-                                $schema_type = Schema::RECORD_SCHEMA)
-    {
+    public function __construct(
+        Name $name,
+        ?string $doc,
+        array $fields,
+        NamedSchemata &$schemata = null,
+        string $schemaType = Schema::RECORD_SCHEMA
+    ) {
         if (null === $fields) {
             throw new SchemaParseException(
                 'Record schema requires a non-empty fields attribute');
         }
 
-        if (Schema::REQUEST_SCHEMA == $schema_type) {
-            parent::__construct($schema_type, $name);
+        if (Schema::REQUEST_SCHEMA === $schemaType) {
+            parent::__construct($schemaType, $name);
         } else {
-            parent::__construct($schema_type, $name, $doc, $schemata);
+            parent::__construct($schemaType, $name, $doc, $schemata);
         }
 
-        [$x, $namespace] = $name->name_and_namespace();
-        $this->fields = self::parse_fields($fields, $namespace, $schemata);
+        $this->fields = self::parseFields($fields, $name->getNamespace(), $schemata);
     }
 
-    /**
-     * @param mixed         $field_data
-     * @param string        $default_namespace namespace of enclosing schema
-     * @param NamedSchemata &$schemata
-     *
-     * @throws SchemaParseException
-     *
-     * @return Field[]
-     */
-    public static function parse_fields($field_data, $default_namespace, NamedSchemata &$schemata)
+    public static function parseFields(array $fieldData, ?string $defaultNamespace, NamedSchemata &$schemata): array
     {
         $fields = [];
-        $field_names = [];
-        foreach ($field_data as $index => $field) {
-            $name = Util::array_value($field, Field::FIELD_NAME_ATTR);
-            $type = Util::array_value($field, Schema::TYPE_ATTR);
-            $order = Util::array_value($field, Field::ORDER_ATTR);
+        $fieldNames = [];
+        foreach ($fieldData as $index => $field) {
+            $name = Util::arrayValue($field, Field::FIELD_NAME_ATTR);
+            $type = Util::arrayValue($field, Schema::TYPE_ATTR);
+            $order = Util::arrayValue($field, Field::ORDER_ATTR);
 
             $default = null;
-            $has_default = false;
+            $hasDefault = false;
             if (array_key_exists(Field::DEFAULT_ATTR, $field)) {
                 $default = $field[Field::DEFAULT_ATTR];
-                $has_default = true;
+                $hasDefault = true;
             }
 
-            if (in_array($name, $field_names)) {
+            if (in_array($name, $fieldNames, true)) {
                 throw new SchemaParseException(
                     sprintf('Field name %s is already in use', $name));
             }
 
-            $is_schema_from_schemata = false;
-            $field_schema = null;
-            if (is_string($type)
-                && $field_schema = $schemata->schema_by_name(
-                    new Name($type, null, $default_namespace))
-            ) {
-                $is_schema_from_schemata = true;
+            $isSchemaFromSchemata = false;
+            $fieldSchema = null;
+            if (is_string($type) && $fieldSchema = $schemata->schemaByName(new Name($type, null, $defaultNamespace))) {
+                $isSchemaFromSchemata = true;
             } else {
-                $field_schema = self::subparse($type, $default_namespace, $schemata);
+                $fieldSchema = self::subparse($type, $defaultNamespace, $schemata);
             }
 
-            $new_field = new Field($name, $field_schema, $is_schema_from_schemata,
-                $has_default, $default, $order);
-            $field_names[] = $name;
-            $fields[] = $new_field;
+            $newField = new Field($name, $fieldSchema, $isSchemaFromSchemata, $hasDefault, $default, $order);
+            $fieldNames[] = $name;
+            $fields[] = $newField;
         }
 
         return $fields;
     }
 
-    /**
-     * @return mixed
-     */
-    public function to_avro()
+    public function toAvro(): array
     {
-        $avro = parent::to_avro();
+        $avro = parent::toAvro();
 
-        $fields_avro = [];
+        $fieldsAvro = [];
         foreach ($this->fields as $field) {
-            $fields_avro[] = $field->to_avro();
+            $fieldsAvro[] = $field->toAvro();
         }
 
-        if (Schema::REQUEST_SCHEMA == $this->type) {
-            return $fields_avro;
+        if (Schema::REQUEST_SCHEMA === $this->type) {
+            return $fieldsAvro;
         }
 
-        $avro[Schema::FIELDS_ATTR] = $fields_avro;
+        $avro[Schema::FIELDS_ATTR] = $fieldsAvro;
 
         return $avro;
     }
@@ -122,25 +98,24 @@ class RecordSchema extends NamedSchema
     /**
      * @return array the schema definitions of the fields of this RecordSchema
      */
-    public function fields()
+    public function fields(): array
     {
         return $this->fields;
     }
 
     /**
-     * @return array a hash table of the fields of this RecordSchema fields
-     *               keyed by each field's name
+     * @return array a hash table of the fields of this RecordSchema fields keyed by each field's name
      */
-    public function fields_hash()
+    public function fieldsHash(): array
     {
-        if (null === $this->fields_hash) {
+        if (null === $this->fieldsHash) {
             $hash = [];
             foreach ($this->fields as $field) {
                 $hash[$field->name()] = $field;
             }
-            $this->fields_hash = $hash;
+            $this->fieldsHash = $hash;
         }
 
-        return $this->fields_hash;
+        return $this->fieldsHash;
     }
 }

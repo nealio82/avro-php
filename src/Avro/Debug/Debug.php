@@ -9,181 +9,141 @@ use Avro\Exception\Exception;
  */
 class Debug
 {
-    /**
-     * @var int high debug level
-     */
-    const DEBUG5 = 5;
-    /**
-     * @var int low debug level
-     */
-    const DEBUG1 = 1;
-    /**
-     * @var int current debug level
-     */
-    const DEBUG_LEVEL = self::DEBUG1;
+    private const DEBUG_LEVEL_LOW = 1;
+    private const DEBUG_LEVEL_HIGH = 5;
+
+    public static $debugLevel = self::DEBUG_LEVEL_LOW;
 
     /**
-     * @var int
-     *
-     * @param mixed $debug_level
-     *
-     * @return bool true if the given $debug_level is equivalent
-     *              or more verbose than than the current debug level
-     *              and false otherwise
+     * @param string $format     format string for the given arguments. Passed as is to <code>vprintf</code>.
+     * @param array  $arguments  array of arguments to pass to vsprinf
+     * @param int    $debugLevel debug level at which to print this statement
      */
-    public static function is_debug($debug_level = self::DEBUG1)
+    public static function debug(string $format, array $arguments, int $debugLevel = self::DEBUG_LEVEL_LOW): bool
     {
-        return self::DEBUG_LEVEL >= $debug_level;
-    }
-
-    /**
-     * @param string $format      format string for the given arguments. Passed as is
-     *                            to <code>vprintf</code>.
-     * @param array  $args        array of arguments to pass to vsprinf
-     * @param int    $debug_level debug level at which to print this statement
-     *
-     * @return bool true
-     */
-    public static function debug($format, $args, $debug_level = self::DEBUG1)
-    {
-        if (self::is_debug($debug_level)) {
-            vprintf($format."\n", $args);
+        if (self::isDebug($debugLevel)) {
+            vprintf($format."\n", $arguments);
         }
 
         return true;
     }
 
     /**
-     * @param string $str
-     *
-     * @return string[] array of hex representation of each byte of $str
+     * @return string[] array of hex representation of each byte of $string
      */
-    public static function hex_array($str)
+    public static function hexArray(string $string): array
     {
-        return self::bytes_array($str);
+        return self::bytesArray($string);
     }
 
     /**
-     * @param string $str
-     * @param string $joiner string used to join
-     *
-     * @return string hex-represented bytes of each byte of $str
-     *                joined by $joiner
+     * @return string hex-represented bytes of each byte of $string joined by $joiner
      */
-    public static function hex_string($str, $joiner = ' ')
+    public static function hexString(string $string, string $joiner = ' '): string
     {
-        return implode($joiner, self::hex_array($str));
+        return implode($joiner, self::hexArray($string));
     }
 
     /**
-     * @param string $str
-     * @param string $format format to represent bytes
-     *
-     * @return string[] array of each byte of $str formatted using $format
+     * @return string[] array of each byte of $string formatted using $format
      */
-    public static function bytes_array($str, $format = 'x%02x')
+    public static function bytesArray(string $string, string $format = 'x%02x'): array
     {
         $x = [];
-        foreach (str_split($str) as $b) {
-            $x[] = sprintf($format, ord($b));
+        foreach (str_split($string) as $byte) {
+            $x[] = sprintf($format, ord($byte));
         }
 
         return $x;
     }
 
     /**
-     * @param string $str
-     *
-     * @return string[] array of bytes of $str represented in decimal format ('%3d')
+     * @return string[] array of bytes of $string represented in decimal format ('%3d')
      */
-    public static function dec_array($str)
+    public static function decArray(string $string): array
     {
-        return self::bytes_array($str, '%3d');
+        return self::bytesArray($string, '%3d');
     }
 
     /**
-     * @param string $str
-     * @param string $joiner string to join bytes of $str
-     *
-     * @return string of bytes of $str represented in decimal format
-     *
-     * @uses \dec_array()
+     * @return string of bytes of $string represented in decimal format
      */
-    public static function dec_string($str, $joiner = ' ')
+    public static function decString(string $string, string $joiner = ' '): string
     {
-        return implode($joiner, self::dec_array($str));
+        return implode($joiner, self::decArray($string));
     }
 
     /**
-     * @param string $str
-     * @param string $format one of 'ctrl', 'hex', or 'dec' for control,
-     *                       hexadecimal, or decimal format for bytes.
+     * @param string $format one of 'ctrl', 'hex', or 'dec' for control, hexadecimal, or decimal format for bytes.
      *                       - ctrl: ASCII control characters represented as text.
-     *                       For example, the null byte is represented as 'NUL'.
-     *                       Visible ASCII characters represent themselves, and
-     *                       others are represented as a decimal ('%03d')
+     *                       For example, the null byte is represented as 'NUL'. Visible ASCII characters represent
+     *                       themselves, and others are represented as a decimal ('%03d')
      *                       - hex: bytes represented in hexadecimal ('%02X')
      *                       - dec: bytes represented in decimal ('%03d')
      *
      * @return string[] array of bytes represented in the given format
      */
-    public static function ascii_array($str, $format = 'ctrl')
+    public static function asciiArray(string $string, string $format = 'ctrl'): array
     {
         if (!in_array($format, ['ctrl', 'hex', 'dec'])) {
             throw new Exception('Unrecognized format specifier');
         }
-        $ctrl_chars = ['NUL', 'SOH', 'STX', 'ETX', 'EOT', 'ENQ', 'ACK', 'BEL', 'BS', 'HT', 'LF', 'VT', 'FF', 'CR', 'SO', 'SI', 'DLE', 'DC1', 'DC2', 'DC3', 'DC4', 'NAK', 'SYN', 'ETB', 'CAN', 'EM', 'SUB', 'ESC', 'FS', 'GS', 'RS', 'US'];
-        $x = [];
-        foreach (str_split($str) as $b) {
-            $db = ord($b);
-            if ($db < 32) {
+        $ctrlChars = [
+            'NUL', 'SOH', 'STX', 'ETX', 'EOT', 'ENQ', 'ACK', 'BEL', 'BS', 'HT', 'LF', 'VT', 'FF', 'CR', 'SO', 'SI',
+            'DLE', 'DC1', 'DC2', 'DC3', 'DC4', 'NAK', 'SYN', 'ETB', 'CAN', 'EM', 'SUB', 'ESC', 'FS', 'GS', 'RS', 'US',
+        ];
+        $matches = [];
+        foreach (str_split($string) as $byte) {
+            $decimalByte = ord($byte);
+            if ($decimalByte < 32) {
                 switch ($format) {
                     case 'ctrl':
-                        $x[] = str_pad($ctrl_chars[$db], 3, ' ', STR_PAD_LEFT);
+                        $matches[] = str_pad($ctrlChars[$decimalByte], 3, ' ', STR_PAD_LEFT);
                         break;
                     case 'hex':
-                        $x[] = sprintf('x%02X', $db);
+                        $matches[] = sprintf('x%02X', $decimalByte);
                         break;
                     case 'dec':
-                        $x[] = str_pad($db, 3, '0', STR_PAD_LEFT);
+                        $matches[] = str_pad($decimalByte, 3, '0', STR_PAD_LEFT);
                         break;
                 }
-            } elseif ($db < 127) {
-                $x[] = "  $b";
-            } elseif (127 == $db) {
+            } elseif ($decimalByte < 127) {
+                $matches[] = sprintf('  %s', $byte);
+            } elseif (127 === $decimalByte) {
                 switch ($format) {
                     case 'ctrl':
-                        $x[] = 'DEL';
+                        $matches[] = 'DEL';
                         break;
                     case 'hex':
-                        $x[] = sprintf('x%02X', $db);
+                        $matches[] = sprintf('x%02X', $decimalByte);
                         break;
                     case 'dec':
-                        $x[] = str_pad($db, 3, '0', STR_PAD_LEFT);
+                        $matches[] = str_pad($decimalByte, 3, '0', STR_PAD_LEFT);
                         break;
                 }
-            } elseif ('hex' == $format) {
-                $x[] = sprintf('x%02X', $db);
+            } elseif ('hex' === $format) {
+                $matches[] = sprintf('x%02X', $decimalByte);
             } else {
-                $x[] = str_pad($db, 3, '0', STR_PAD_LEFT);
+                $matches[] = str_pad($decimalByte, 3, '0', STR_PAD_LEFT);
             }
         }
 
-        return $x;
+        return $matches;
     }
 
     /**
-     * @param string $str
-     * @param string $format one of 'ctrl', 'hex', or 'dec'.
-     *                       See {@link self::ascii_array()} for more description
-     * @param string $joiner
-     *
-     * @return string of bytes joined by $joiner
-     *
-     * @uses \ascii_array()
+     * @param string $format one of 'ctrl', 'hex', or 'dec'
      */
-    public static function ascii_string($str, $format = 'ctrl', $joiner = ' ')
+    public static function asciiString(string $string, string $format = 'ctrl', string $joiner = ' '): string
     {
-        return implode($joiner, self::ascii_array($str, $format));
+        return implode($joiner, self::asciiArray($string, $format));
+    }
+
+    /**
+     * Checks if the given $debugLevel is equivalent or more verbose than than the current debug level.
+     */
+    private static function isDebug(int $debugLevel = self::DEBUG_LEVEL_LOW): bool
+    {
+        return self::$debugLevel >= $debugLevel;
     }
 }

@@ -2,22 +2,17 @@
 
 namespace Avro\Exception;
 
+use Avro\Schema\Schema;
+
 /**
- * Exceptions arising from incompatibility between
- * reader and writer schemas.
+ * Exceptions arising from incompatibility between reader and writer schemas.
  */
 class IOSchemaMatchException extends Exception
 {
-    /**
-     * IOSchemaMatchException constructor.
-     *
-     * @param string $writers_schema
-     * @param int    $readers_schema
-     */
-    public function __construct($writers_schema, $readers_schema)
+    public function __construct(Schema $writersSchema, Schema $readersSchema)
     {
         parent::__construct(
-            sprintf("Writer's schema %s and Reader's schema %s do not match.",
-                $writers_schema, $readers_schema));
+            sprintf('Writer\'s schema %s and Reader\'s schema %s do not match.', $writersSchema, $readersSchema)
+        );
     }
 }

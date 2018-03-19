@@ -16,9 +16,9 @@ class ProtocolTest extends TestCase
             $protocol = Protocol::parse($this->loadDataFromFile($filename));
 
             $this->assertInstanceOf(Protocol::class, $protocol);
-        } catch (SchemaParseException $x) {
+        } catch (SchemaParseException $e) {
             // Exception ok if we expected this protocol spec to be unparseable.
-            $this->assertFalse($isParseable);
+            $this->assertFalse($isParseable, sprintf('%s test fails with message: %s', $filename, $e->getMessage()));
         }
     }
 
@@ -34,15 +34,6 @@ class ProtocolTest extends TestCase
         yield ['invalid_repeated_name.avr', false];
         yield ['bulk_data.avr', true];
         yield ['symbols.avr', true];
-    }
-
-    /**
-     * @expectedException \Avro\Exception\ProtocolParseException
-     * @expectedExceptionMessage Protocol can't be null
-     */
-    public function testMissingData(): void
-    {
-        Protocol::parse(null);
     }
 
     private function loadDataFromFile(string $filename): string

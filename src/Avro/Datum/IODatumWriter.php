@@ -4,7 +4,13 @@ namespace Avro\Datum;
 
 use Avro\Exception\Exception;
 use Avro\Exception\IOTypeException;
+use Avro\Schema\ArraySchema;
+use Avro\Schema\EnumSchema;
+use Avro\Schema\FixedSchema;
+use Avro\Schema\MapSchema;
+use Avro\Schema\RecordSchema;
 use Avro\Schema\Schema;
+use Avro\Schema\UnionSchema;
 
 /**
  * Handles schema-specific writing of data to the encoder.
@@ -14,158 +20,172 @@ class IODatumWriter
 {
     /**
      * Schema used by this instance to write Avro data.
-     *
-     * @var Schema
      */
-    private $writers_schema;
+    private $writersSchema;
 
-    /**
-     * @param Schema $writers_schema
-     */
-    public function __construct(Schema $writers_schema = null)
+    public function __construct(?Schema $writersSchema = null)
     {
-        $this->writers_schema = $writers_schema;
+        $this->writersSchema = $writersSchema;
     }
 
-    /**
-     * @param Schema          $writers_schema
-     * @param                 $datum
-     * @param IOBinaryEncoder $encoder
-     *
-     * @throws IOTypeException if $datum is invalid for $writers_schema
-     *
-     * @return mixed
-     */
-    public function write_data(Schema $writers_schema, $datum, IOBinaryEncoder $encoder)
+    public function writeData(Schema $writersSchema, $datum, IOBinaryEncoder $encoder): void
     {
-        if (!Schema::is_valid_datum($writers_schema, $datum)) {
-            throw new IOTypeException($writers_schema, $datum);
+        if (!Schema::isValidDatum($writersSchema, $datum)) {
+            throw new IOTypeException($writersSchema, $datum);
         }
 
-        switch ($writers_schema->type()) {
+        switch ($writersSchema->type()) {
             case Schema::NULL_TYPE:
-                return $encoder->write_null($datum);
+                $encoder->writeNull($datum);
+                break;
             case Schema::BOOLEAN_TYPE:
-                return $encoder->write_boolean($datum);
+                $encoder->writeBoolean($datum);
+                break;
             case Schema::INT_TYPE:
-                return $encoder->write_int($datum);
+                $encoder->writeInt($datum);
+                break;
             case Schema::LONG_TYPE:
-                return $encoder->write_long($datum);
+                $encoder->writeLong($datum);
+                break;
             case Schema::FLOAT_TYPE:
-                return $encoder->write_float($datum);
+                $encoder->writeFloat($datum);
+                break;
             case Schema::DOUBLE_TYPE:
-                return $encoder->write_double($datum);
+                $encoder->writeDouble($datum);
+                break;
             case Schema::STRING_TYPE:
-                return $encoder->write_string($datum);
+                $encoder->writeString($datum);
+                break;
             case Schema::BYTES_TYPE:
-                return $encoder->write_bytes($datum);
+                $encoder->writeBytes($datum);
+                break;
             case Schema::ARRAY_SCHEMA:
-                return $this->write_array($writers_schema, $datum, $encoder);
+                $this->writeArray($writersSchema, $datum, $encoder);
+                break;
             case Schema::MAP_SCHEMA:
-                return $this->write_map($writers_schema, $datum, $encoder);
+                $this->writeMap($writersSchema, $datum, $encoder);
+                break;
             case Schema::FIXED_SCHEMA:
-                return $this->write_fixed($writers_schema, $datum, $encoder);
+                $this->writeFixed($writersSchema, $datum, $encoder);
+                break;
             case Schema::ENUM_SCHEMA:
-                return $this->write_enum($writers_schema, $datum, $encoder);
+                $this->writeEnum($writersSchema, $datum, $encoder);
+                break;
             case Schema::RECORD_SCHEMA:
             case Schema::ERROR_SCHEMA:
             case Schema::REQUEST_SCHEMA:
-                return $this->write_record($writers_schema, $datum, $encoder);
+                $this->writeRecord($writersSchema, $datum, $encoder);
+                break;
             case Schema::UNION_SCHEMA:
-                return $this->write_union($writers_schema, $datum, $encoder);
+                $this->writeUnion($writersSchema, $datum, $encoder);
+                break;
             default:
-                throw new Exception(sprintf('Uknown type: %s',
-                    $writers_schema->type));
+                throw new Exception(sprintf('Uknown type: %s', $writersSchema->type));
         }
     }
 
     /**
-     * @param                 $datum
-     * @param IOBinaryEncoder $encoder
+     * @param mixed $datum
      */
     public function write($datum, IOBinaryEncoder $encoder): void
     {
-        $this->write_data($this->writers_schema, $datum, $encoder);
+        $this->writeData($this->writersSchema, $datum, $encoder);
     }
 
-    /**#@+
-     * @param Schema                              $writers_schema
-     * @param null|boolean|int|float|string|array $datum item to be written
-     * @param IOBinaryEncoder                     $encoder
+    /**
+     * @param Schema|ArraySchema $writersSchema
+     * @param mixed              $datum
      */
-    private function write_array(Schema $writers_schema, $datum, IOBinaryEncoder $encoder)
+    private function writeArray(Schema $writersSchema, $datum, IOBinaryEncoder $encoder): void
     {
-        $datum_count = count($datum);
-        if (0 < $datum_count) {
-            $encoder->write_long($datum_count);
-            $items = $writers_schema->items();
+        $datumCount = count($datum);
+        if (0 < $datumCount) {
+            $encoder->writeLong($datumCount);
+            $items = $writersSchema->items();
             foreach ($datum as $item) {
-                $this->write_data($items, $item, $encoder);
+                $this->writeData($items, $item, $encoder);
             }
         }
 
-        return $encoder->write_long(0);
+        $encoder->writeLong(0);
     }
 
-    private function write_map(Schema $writers_schema, $datum, IOBinaryEncoder $encoder): void
+    /**
+     * @param Schema|MapSchema $writersSchema
+     * @param mixed            $datum
+     */
+    private function writeMap(Schema $writersSchema, $datum, IOBinaryEncoder $encoder): void
     {
-        $datum_count = count($datum);
-        if ($datum_count > 0) {
-            $encoder->write_long($datum_count);
-            foreach ($datum as $k => $v) {
-                $encoder->write_string($k);
-                $this->write_data($writers_schema->values(), $v, $encoder);
+        $datumCount = count($datum);
+        if ($datumCount > 0) {
+            $encoder->writeLong($datumCount);
+            foreach ($datum as $key => $value) {
+                $encoder->writeString($key);
+                $this->writeData($writersSchema->values(), $value, $encoder);
             }
         }
-        $encoder->write_long(0);
+
+        $encoder->writeLong(0);
     }
 
-    private function write_union(Schema $writers_schema, $datum, IOBinaryEncoder $encoder): void
+    /**
+     * @param Schema|UnionSchema $writersSchema
+     * @param mixed              $datum
+     */
+    private function writeUnion(Schema $writersSchema, $datum, IOBinaryEncoder $encoder): void
     {
-        $datum_schema_index = -1;
-        $datum_schema = null;
-        foreach ($writers_schema->schemas() as $index => $schema) {
-            if (Schema::is_valid_datum($schema, $datum)) {
-                $datum_schema_index = $index;
-                $datum_schema = $schema;
+        $datumSchemaIndex = -1;
+        $datumSchema = null;
+        foreach ($writersSchema->schemas() as $index => $schema) {
+            if (Schema::isValidDatum($schema, $datum)) {
+                $datumSchemaIndex = $index;
+                $datumSchema = $schema;
                 break;
             }
         }
 
-        if (null === $datum_schema) {
-            throw new IOTypeException($writers_schema, $datum);
+        if (null === $datumSchema) {
+            throw new IOTypeException($writersSchema, $datum);
         }
 
-        $encoder->write_long($datum_schema_index);
-        $this->write_data($datum_schema, $datum, $encoder);
+        $encoder->writeLong($datumSchemaIndex);
+        $this->writeData($datumSchema, $datum, $encoder);
     }
 
-    private function write_enum(Schema $writers_schema, $datum, IOBinaryEncoder $encoder)
+    /**
+     * @param Schema|EnumSchema $writersSchema
+     * @param mixed             $datum
+     */
+    private function writeEnum(Schema $writersSchema, $datum, IOBinaryEncoder $encoder): void
     {
-        $datum_index = $writers_schema->symbol_index($datum);
-
-        return $encoder->write_int($datum_index);
+        $encoder->writeInt($writersSchema->symbolIndex($datum));
     }
 
-    private function write_fixed(Schema $writers_schema, $datum, IOBinaryEncoder $encoder)
+    /**
+     * NOTE Unused $writersSchema parameter included for consistency with other write* methods.
+     *
+     * @param Schema|FixedSchema $writersSchema
+     * @param mixed              $datum
+     */
+    private function writeFixed(Schema $writersSchema, $datum, IOBinaryEncoder $encoder): void
     {
-        /*
-         * NOTE Unused $writers_schema parameter included for consistency
-         * with other write_* methods.
-         */
-        return $encoder->write($datum);
+        $encoder->write($datum);
     }
 
-    private function write_record(Schema $writers_schema, $datum, IOBinaryEncoder $encoder): void
+    /**
+     * @param Schema|RecordSchema $writersSchema
+     * @param mixed               $datum
+     */
+    private function writeRecord(Schema $writersSchema, $datum, IOBinaryEncoder $encoder): void
     {
-        foreach ($writers_schema->fields() as $field) {
-            if ($field->has_default_value() && !isset($datum[$field->name()])) {
-                $value = $field->default_value();
+        foreach ($writersSchema->fields() as $field) {
+            if ($field->hasDefaultValue() && !isset($datum[$field->name()])) {
+                $value = $field->defaultValue();
             } else {
                 $value = $datum[$field->name()];
             }
 
-            $this->write_data($field->type(), $value, $encoder);
+            $this->writeData($field->type(), $value, $encoder);
         }
     }
 }

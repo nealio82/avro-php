@@ -3,64 +3,47 @@
 namespace Avro\Schema;
 
 /**
- * Avro map schema consisting of named values of defined
- * Avro Schema types.
+ * Avro map schema consisting of named values of defined Avro Schema types.
  */
 class MapSchema extends Schema
 {
-    /**
-     * @var string|Schema named schema name or Schema
-     *                    of map schema values
-     */
     private $values;
 
     /**
-     * @var bool true if the named schema
-     *           XXX Couldn't we derive this based on whether or not
-     *           $this->values is a string?
+     * @todo: Couldn't we derive this based on whether or not $this->values is a string?
      */
-    private $is_values_schema_from_schemata;
+    private $isValuesSchemaFromSchemata;
 
     /**
-     * @param string|Schema $values
-     * @param string        $default_namespace namespace of enclosing schema
-     * @param NamedSchemata &$schemata
+     * @param mixed $values
      */
-    public function __construct($values, $default_namespace, NamedSchemata &$schemata = null)
+    public function __construct($values, ?string $defaultNamespace, NamedSchemata &$schemata = null)
     {
         parent::__construct(Schema::MAP_SCHEMA);
 
-        $this->is_values_schema_from_schemata = false;
-        $values_schema = null;
+        $this->isValuesSchemaFromSchemata = false;
+        $valuesSchema = null;
         if (is_string($values)
-            && $values_schema = $schemata->schema_by_name(
-                new Name($values, null, $default_namespace))
+            && $valuesSchema = $schemata->schemaByName(new Name($values, null, $defaultNamespace))
         ) {
-            $this->is_values_schema_from_schemata = true;
+            $this->isValuesSchemaFromSchemata = true;
         } else {
-            $values_schema = Schema::subparse($values, $default_namespace,
-                $schemata);
+            $valuesSchema = Schema::subparse($values, $defaultNamespace, $schemata);
         }
 
-        $this->values = $values_schema;
+        $this->values = $valuesSchema;
     }
 
-    /**
-     * @return XXX|Schema
-     */
-    public function values()
+    public function values(): ?Schema
     {
         return $this->values;
     }
 
-    /**
-     * @return mixed
-     */
-    public function to_avro()
+    public function toAvro(): array
     {
-        $avro = parent::to_avro();
-        $avro[Schema::VALUES_ATTR] = $this->is_values_schema_from_schemata
-            ? $this->values->qualified_name() : $this->values->to_avro();
+        $avro = parent::toAvro();
+        $avro[Schema::VALUES_ATTR] = $this->isValuesSchemaFromSchemata
+            ? $this->values->getQualifiedName() : $this->values->toAvro();
 
         return $avro;
     }

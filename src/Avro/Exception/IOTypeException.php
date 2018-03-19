@@ -2,20 +2,20 @@
 
 namespace Avro\Exception;
 
+use Avro\Schema\Schema;
+
 /**
  * Exceptions arising from writing or reading Avro data.
  */
 class IOTypeException extends Exception
 {
     /**
-     * IOTypeException constructor.
-     *
-     * @param string $expected_schema
-     * @param int    $datum
+     * @param mixed $datum
      */
-    public function __construct($expected_schema, $datum)
+    public function __construct(Schema $expectedSchema, $datum)
     {
-        parent::__construct(sprintf('The datum %s is not an example of schema %s',
-            var_export($datum, true), $expected_schema));
+        parent::__construct(
+            sprintf('The datum %s is not an example of schema %s', var_export($datum, true), $expectedSchema)
+        );
     }
 }

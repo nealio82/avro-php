@@ -3,7 +3,7 @@
 namespace Avro\Exception;
 
 /**
- * Exceptions associated with parsing JSON schema represenations.
+ * Exceptions associated with parsing JSON schema representations.
  */
 class SchemaParseException extends Exception
 {

@@ -5,51 +5,26 @@ namespace Avro\Schema;
 use Avro\Exception\SchemaParseException;
 
 /**
- *  Keeps track of NamedSchema which have been observed so far,
- *  as well as the default namespace.
+ *  Keeps track of NamedSchema which have been observed so far, as well as the default namespace.
  */
 class NamedSchemata
 {
-    /**
-     * @var NamedSchema[]
-     */
     private $schemata;
 
     /**
-     * @param NamedSchemata []
-     * @param mixed $schemata
+     * @param NamedSchemata[] $schemata
      */
-    public function __construct($schemata = [])
+    public function __construct(array $schemata = [])
     {
         $this->schemata = $schemata;
     }
 
-    public function list_schemas(): void
-    {
-        var_export($this->schemata);
-        foreach ($this->schemata as $sch) {
-            echo 'Schema '.$sch->__toString()."\n";
-        }
-    }
-
-    /**
-     * @param string $fullname
-     *
-     * @return bool true if there exists a schema with the given name
-     *              and false otherwise
-     */
-    public function has_name($fullname)
+    public function hasName(string $fullname): bool
     {
         return array_key_exists($fullname, $this->schemata);
     }
 
-    /**
-     * @param string $fullname
-     *
-     * @return Schema|null the schema which has the given name,
-     *                     or null if there is no schema with the given name
-     */
-    public function schema($fullname)
+    public function schema(string $fullname): ?Schema
     {
         if (isset($this->schemata[$fullname])) {
             return $this->schemata[$fullname];
@@ -58,34 +33,26 @@ class NamedSchemata
         return null;
     }
 
-    /**
-     * @param Name $name
-     *
-     * @return Schema|null
-     */
-    public function schema_by_name(Name $name)
+    public function schemaByName(Name $name): ?Schema
     {
-        return $this->schema($name->fullname());
+        return $this->schema($name->getFullname());
     }
 
     /**
-     * Creates a new NamedSchemata instance of this schemata instance
-     * with the given $schema appended.
-     *
-     * @param NamedSchema schema to add to this existing schemata
-     *
-     * @return NamedSchemata
+     * Creates a new NamedSchemata instance of this schemata instance with the given $schema appended.
      */
-    public function clone_with_new_schema(NamedSchema $schema)
+    public function cloneWithNewSchema(NamedSchema $schema): self
     {
-        $name = $schema->fullname();
-        if (Schema::is_valid_type($name)) {
-            throw new SchemaParseException(
-                sprintf('Name "%s" is a reserved type name', $name));
-        } elseif ($this->has_name($name)) {
-            throw new SchemaParseException(
-                sprintf('Name "%s" is already in use', $name));
+        $name = $schema->getName()->getFullname();
+
+        if (Schema::isValidType($name)) {
+            throw new SchemaParseException(sprintf('Name "%s" is a reserved type name', $name));
         }
+
+        if ($this->hasName($name)) {
+            throw new SchemaParseException(sprintf('Name "%s" is already in use', $name));
+        }
+
         $schemata = new self($this->schemata);
         $schemata->schemata[$name] = $schema;
 

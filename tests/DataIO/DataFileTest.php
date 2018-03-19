@@ -34,10 +34,10 @@ class DataFileTest extends TestCase
     {
         $dataFile = $this->addDataFile('data-wr-nothing-null.avr');
         $writersSchema = '"null"';
-        $dw = DataIO::open_file($dataFile, 'w', $writersSchema);
+        $dw = DataIO::openFile($dataFile, 'w', $writersSchema);
         $dw->close();
 
-        $dr = DataIO::open_file($dataFile);
+        $dr = DataIO::openFile($dataFile);
         $drData = (array) $dr->data();
         $readData = array_shift($drData);
         $dr->close();
@@ -49,11 +49,11 @@ class DataFileTest extends TestCase
         $dataFile = $this->addDataFile('data-wr-null.avr');
         $writersSchema = '"null"';
         $data = null;
-        $dw = DataIO::open_file($dataFile, 'w', $writersSchema);
+        $dw = DataIO::openFile($dataFile, 'w', $writersSchema);
         $dw->append($data);
         $dw->close();
 
-        $dr = DataIO::open_file($dataFile);
+        $dr = DataIO::openFile($dataFile);
         $drData = (array) $dr->data();
         $readData = array_shift($drData);
         $dr->close();
@@ -65,11 +65,11 @@ class DataFileTest extends TestCase
         $dataFile = $this->addDataFile('data-wr-str.avr');
         $writersSchema = '"string"';
         $data = 'foo';
-        $dw = DataIO::open_file($dataFile, 'w', $writersSchema);
+        $dw = DataIO::openFile($dataFile, 'w', $writersSchema);
         $dw->append($data);
         $dw->close();
 
-        $dr = DataIO::open_file($dataFile);
+        $dr = DataIO::openFile($dataFile);
         $drData = (array) $dr->data();
         $readData = array_shift($drData);
         $dr->close();
@@ -82,11 +82,11 @@ class DataFileTest extends TestCase
         $writersSchema = '"int"';
         $data = 1;
 
-        $dw = DataIO::open_file($dataFile, 'w', $writersSchema);
+        $dw = DataIO::openFile($dataFile, 'w', $writersSchema);
         $dw->append(1);
         $dw->close();
 
-        $dr = DataIO::open_file($dataFile);
+        $dr = DataIO::openFile($dataFile);
         $drData = (array) $dr->data();
         $readData = array_shift($drData);
         $dr->close();
@@ -98,11 +98,11 @@ class DataFileTest extends TestCase
         $dataFile = $this->addDataFile('data-wr-true.avr');
         $writersSchema = '"boolean"';
         $datum = true;
-        $dw = DataIO::open_file($dataFile, 'w', $writersSchema);
+        $dw = DataIO::openFile($dataFile, 'w', $writersSchema);
         $dw->append($datum);
         $dw->close();
 
-        $dr = DataIO::open_file($dataFile);
+        $dr = DataIO::openFile($dataFile);
         $drData = (array) $dr->data();
         $readDatum = array_shift($drData);
         $dr->close();
@@ -114,11 +114,11 @@ class DataFileTest extends TestCase
         $dataFile = $this->addDataFile('data-wr-false.avr');
         $writersSchema = '"boolean"';
         $datum = false;
-        $dw = DataIO::open_file($dataFile, 'w', $writersSchema);
+        $dw = DataIO::openFile($dataFile, 'w', $writersSchema);
         $dw->append($datum);
         $dw->close();
 
-        $dr = DataIO::open_file($dataFile);
+        $dr = DataIO::openFile($dataFile);
         $drData = (array) $dr->data();
         $readDatum = array_shift($drData);
         $dr->close();
@@ -130,13 +130,13 @@ class DataFileTest extends TestCase
         $dataFile = $this->addDataFile('data-wr-int-ary.avr');
         $writersSchema = '"int"';
         $data = [10, 20, 30, 40, 50, 60, 70];
-        $dw = DataIO::open_file($dataFile, 'w', $writersSchema);
+        $dw = DataIO::openFile($dataFile, 'w', $writersSchema);
         foreach ($data as $datum) {
             $dw->append($datum);
         }
         $dw->close();
 
-        $dr = DataIO::open_file($dataFile);
+        $dr = DataIO::openFile($dataFile);
         $readData = $dr->data();
         $dr->close();
         $this->assertSame(
@@ -167,7 +167,7 @@ JSON;
             ['username' => 'john', 'age' => 25, 'verified' => true],
             ['username' => 'ryan', 'age' => 23, 'verified' => false],
         ];
-        $dw = DataIO::open_file($dataFile, 'w', $writerSchema);
+        $dw = DataIO::openFile($dataFile, 'w', $writerSchema);
         foreach ($data as $datum) {
             $dw->append($datum);
         }
@@ -179,7 +179,7 @@ JSON;
       {"name": "username", "type": "string"}
       ]}
 JSON;
-        $dr = DataIO::open_file($dataFile, 'r', $readerSchema);
+        $dr = DataIO::openFile($dataFile, 'r', $readerSchema);
         foreach ($dr->data() as $index => $record) {
             $this->assertSame($data[$index]['username'], $record['username']);
         }
@@ -229,7 +229,7 @@ JSON;
                 'something_error' => ['code' => 401],
             ],
         ];
-        $dw = DataIO::open_file($dataFile, 'w', $writersSchema);
+        $dw = DataIO::openFile($dataFile, 'w', $writersSchema);
         foreach ($data as $datum) {
             $dw->append($datum);
         }
@@ -245,7 +245,7 @@ JSON;
                      'union',
                  ] as $s) {
             $readersSchema = json_decode($writersSchema, true);
-            $dr = DataIO::open_file($dataFile, 'r', json_encode($readersSchema));
+            $dr = DataIO::openFile($dataFile, 'r', json_encode($readersSchema));
             foreach ($dr->data() as $idx => $obj) {
                 foreach ($readersSchema['fields'] as $field) {
                     $fieldName = $field['name'];

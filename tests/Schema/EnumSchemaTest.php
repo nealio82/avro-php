@@ -16,7 +16,7 @@ class EnumSchemaTest extends TestCase
             $schema = Schema::parse($schemaString);
 
             $this->assertTrue($isValid, sprintf("schema_string: %s\n", $schemaString));
-            $this->assertEquals(json_decode($schemaString, true), $schema->to_avro());
+            $this->assertEquals(json_decode($schemaString, true), $schema->toAvro());
         } catch (SchemaParseException $e) {
             $this->assertFalse(
                 $isValid,
@@ -29,12 +29,12 @@ class EnumSchemaTest extends TestCase
     {
         // schemaString isValid
         yield ['{"type": "enum", "name": "Test", "symbols": ["A", "B"]}', true];
-        yield ['{"type": "enum", "name": "Status", "symbols": "Normal Caution Critical"}', false];
-        yield ['{"type": "enum", "name": [ 0, 1, 1, 2, 3, 5, 8 ], "symbols": ["Golden", "Mean"]}', false];
-        yield ['{"type": "enum", "symbols" : ["I", "will", "fail", "no", "name"]}', false];
+        yield ['{"type": "enum", "name": "Test", "symbols": ["", "B"]}', false];
+        yield ['{"type": "enum", "name": "Test", "symbols": ["A", 1]}', false];
+        yield ['{"type": "enum", "name": "Test", "symbols": [null, "B"]}', false];
+        yield ['{"type": "enum", "name": "blood_types", "doc": "AB is freaky.", "symbols" : ["A", "AB", "B", "O"]}', true];
         yield ['{"type": "enum", "name": "Test" "symbols" : ["AA", "AA"]}', false];
         yield ['{"type":"enum","name":"Test","symbols":["AA", 16]}', false];
-        yield ['{"type": "enum", "name": "blood_types", "doc": "AB is freaky.", "symbols" : ["A", "AB", "B", "O"]}', true];
         yield ['{"type": "enum", "name": "blood-types", "doc": 16, "symbols" : ["A", "AB", "B", "O"]}', false];
     }
 }

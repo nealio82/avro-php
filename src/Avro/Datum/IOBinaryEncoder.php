@@ -7,14 +7,10 @@ use Avro\GMP\GMP;
 use Avro\IO\IO;
 
 /**
- * Encodes and writes Avro data to an IO object using
- * Avro binary encoding.
+ * Encodes and writes Avro data to an IO object using Avro binary encoding.
  */
 class IOBinaryEncoder
 {
-    /**
-     * @var IO
-     */
     private $io;
 
     /**
@@ -22,77 +18,62 @@ class IOBinaryEncoder
      */
     public function __construct(IO $io)
     {
-        Avro::check_platform();
+        Avro::checkPlatform();
         $this->io = $io;
     }
 
     /**
      * Performs encoding of the given float value to a binary string.
      *
-     * XXX: This is <b>not</b> endian-aware! The {@link Avro::check_platform()}
-     * called in {@link IOBinaryEncoder::__construct()} should ensure the
-     * library is only used on little-endian platforms, which ensure the little-endian
-     * encoding required by the Avro spec.
-     *
-     * @param float $float
-     *
-     * @return string bytes
-     *
-     * @see Avro::check_platform()
+     * This is <b>not</b> endian-aware! The {@link Avro::checkPlatform()} called in
+     * {@link IOBinaryEncoder::__construct()} should ensure the library is only used on little-endian platforms,
+     * which ensure the little-endian encoding required by the Avro spec.
      */
-    public static function float_to_int_bits($float)
+    public static function floatToIntBits(float $float): string
     {
-        return pack('f', (float) $float);
+        return pack('f', $float);
     }
 
     /**
      * Performs encoding of the given double value to a binary string.
      *
-     * XXX: This is <b>not</b> endian-aware! See comments in
-     * {@link IOBinaryEncoder::float_to_int_bits()} for details.
-     *
-     * @param float $double
-     *
-     * @return string bytes
+     * This is <b>not</b> endian-aware! See comments in {@link IOBinaryEncoder::floatToIntBits()} for details.
      */
-    public static function double_to_long_bits($double)
+    public static function doubleToLongBits(float $double): string
     {
-        return pack('d', (float) $double);
+        return pack('d', $double);
     }
 
     /**
-     * @param int|string $n
-     *
-     * @return string long $n encoded as bytes
-     *
      * @internal this relies on 64-bit PHP
+     *
+     * @param int|string $number
      */
-    public static function encode_long($n)
+    public static function encodeLong($number): string
     {
-        $n = (int) $n;
-        $n = ($n << 1) ^ ($n >> 63);
-        $str = '';
-        while (0 != ($n & ~0x7F)) {
-            $str .= chr(($n & 0x7F) | 0x80);
-            $n >>= 7;
+        $number = (int) $number;
+        $number = ($number << 1) ^ ($number >> 63);
+        $string = '';
+        while (0 !== ($number & ~0x7F)) {
+            $string .= chr(($number & 0x7F) | 0x80);
+            $number >>= 7;
         }
-        $str .= chr($n);
+        $string .= chr($number);
 
-        return $str;
+        return $string;
     }
 
     /**
      * @param null $datum actual value is ignored
      */
-    public function write_null($datum)
+    public function writeNull($datum): void
     {
-        return null;
     }
 
     /**
      * @param bool $datum
      */
-    public function write_boolean($datum): void
+    public function writeBoolean($datum): void
     {
         $byte = $datum ? chr(1) : chr(0);
         $this->write($byte);
@@ -101,59 +82,53 @@ class IOBinaryEncoder
     /**
      * @param int $datum
      */
-    public function write_int($datum): void
+    public function writeInt($datum): void
     {
-        $this->write_long($datum);
+        $this->writeLong($datum);
     }
 
     /**
-     * @param int $n
+     * @param int $number
      */
-    public function write_long($n): void
+    public function writeLong($number): void
     {
-        if (Avro::uses_gmp()) {
-            $this->write(GMP::encode_long($n));
+        if (Avro::usesGmp()) {
+            $this->write(GMP::encodeLong($number));
         } else {
-            $this->write(self::encode_long($n));
+            $this->write(self::encodeLong($number));
         }
     }
 
     /**
      * @param float $datum
-     *
-     * @uses \self::float_to_int_bits()
      */
-    public function write_float($datum): void
+    public function writeFloat($datum): void
     {
-        $this->write(self::float_to_int_bits($datum));
+        $this->write(self::floatToIntBits($datum));
     }
 
     /**
      * @param float $datum
-     *
-     * @uses \self::double_to_long_bits()
      */
-    public function write_double($datum): void
+    public function writeDouble($datum): void
     {
-        $this->write(self::double_to_long_bits($datum));
+        $this->write(self::doubleToLongBits($datum));
     }
 
     /**
-     * @param string $str
-     *
-     * @uses \self::write_bytes()
+     * @param string $string
      */
-    public function write_string($str): void
+    public function writeString($string): void
     {
-        $this->write_bytes($str);
+        $this->writeBytes($string);
     }
 
     /**
      * @param string $bytes
      */
-    public function write_bytes($bytes): void
+    public function writeBytes($bytes): void
     {
-        $this->write_long(strlen($bytes));
+        $this->writeLong(strlen($bytes));
         $this->write($bytes);
     }
 

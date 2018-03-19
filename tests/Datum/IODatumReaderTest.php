@@ -17,7 +17,7 @@ class IODatumReaderTest extends TestCase
 JSON;
         $readersSchema = $writersSchema;
         $this->assertTrue(
-            IODatumReader::schemas_match(
+            IODatumReader::schemasMatch(
                 Schema::parse($writersSchema),
                 Schema::parse($readersSchema)
             )
