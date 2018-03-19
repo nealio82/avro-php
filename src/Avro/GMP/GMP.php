@@ -5,198 +5,205 @@ namespace Avro\GMP;
 /**
  * Methods for handling 64-bit operations using the GMP extension.
  *
- * This is a naive and hackish implementation that is intended
- * to work well enough to support Avro. It has not been tested
- * beyond what's needed to decode and encode long values.
- *
- * @package Avro
+ * This is a naive and hackish implementation that is intended to work well enough to support Avro.
  */
 class GMP
 {
+    /**
+     * @var \GMP|resource|string|null memoized GMP resource for zero
+     */
+    private static $gmp0;
 
     /**
-     * @var resource memoized GMP resource for zero
+     * @var \GMP|resource|string|null memoized GMP resource for one (1)
      */
-    private static $gmp_0;
+    private static $gmp1;
 
     /**
-     * @returns resource GMP resource for zero
+     * @var \GMP|resource|string|null memoized GMP resource for two (2)
      */
-    private static function gmp_0()
+    private static $gmp2;
+
+    /**
+     * @var \GMP|resource|string|null memoized GMP resource for 0x7f
+     */
+    private static $gmp0x7f;
+
+    /**
+     * @var \GMP|resource|string|null memoized GMP resource for 64-bit ~0x7f
+     */
+    private static $gmpN0x7f;
+
+    /**
+     * @var \GMP|resource|string|null memoized GMP resource for 64-bits of 1
+     */
+    private static $gmp0xfs;
+
+    /**
+     * @param \GMP|resource|string $gmp
+     *
+     * @return \GMP resource 64-bit two's complement of input
+     */
+    public static function gmpTwosComplement($gmp): \GMP
     {
-        if (!isset(self::$gmp_0))
-            self::$gmp_0 = gmp_init('0');
-        return self::$gmp_0;
+        return gmp_neg(gmp_sub(gmp_pow(self::gmp2(), 64), $gmp));
     }
 
     /**
-     * @var resource memoized GMP resource for one (1)
+     * @internal only works up to shift 63 (doesn't wrap bits around)
+     *
+     * @param \GMP|resource|string $gmp
      */
-    private static $gmp_1;
-
-    /**
-     * @returns resource GMP resource for one (1)
-     */
-    private static function gmp_1()
+    public static function shiftLeft($gmp, int $shift): string
     {
-        if (!isset(self::$gmp_1))
-            self::$gmp_1 = gmp_init('1');
-        return self::$gmp_1;
-    }
-
-    /**
-     * @var resource memoized GMP resource for two (2)
-     */
-    private static $gmp_2;
-
-    /**
-     * @returns resource GMP resource for two (2)
-     */
-    private static function gmp_2()
-    {
-        if (!isset(self::$gmp_2))
-            self::$gmp_2 = gmp_init('2');
-        return self::$gmp_2;
-    }
-
-    /**
-     * @var resource memoized GMP resource for 0x7f
-     */
-    private static $gmp_0x7f;
-
-    /**
-     * @returns resource GMP resource for 0x7f
-     */
-    private static function gmp_0x7f()
-    {
-        if (!isset(self::$gmp_0x7f))
-            self::$gmp_0x7f = gmp_init('0x7f');
-        return self::$gmp_0x7f;
-    }
-
-    /**
-     * @var resource memoized GMP resource for 64-bit ~0x7f
-     */
-    private static $gmp_n0x7f;
-
-    /**
-     * @returns resource GMP resource for 64-bit ~0x7f
-     */
-    private static function gmp_n0x7f()
-    {
-        if (!isset(self::$gmp_n0x7f))
-            self::$gmp_n0x7f = gmp_init('0xffffffffffffff80');
-        return self::$gmp_n0x7f;
-    }
-
-    /**
-     * @var resource memoized GMP resource for 64-bits of 1
-     */
-    private static $gmp_0xfs;
-
-    /**
-     * @returns resource GMP resource for 64-bits of 1
-     */
-    private static function gmp_0xfs()
-    {
-        if (!isset(self::$gmp_0xfs))
-            self::$gmp_0xfs = gmp_init('0xffffffffffffffff');
-        return self::$gmp_0xfs;
-    }
-
-    /**
-     * @param GMP resource
-     * @returns GMP resource 64-bit two's complement of input.
-     */
-    static function gmp_twos_complement($g)
-    {
-        return gmp_neg(gmp_sub(gmp_pow(self::gmp_2(), 64), $g));
-    }
-
-    /**
-     * @interal Only works up to shift 63 (doesn't wrap bits around).
-     * @param resource|int|string $g
-     * @param int $shift number of bits to shift left
-     * @returns resource $g shifted left
-     */
-    static function shift_left($g, $shift)
-    {
-        if (0 == $shift)
-            return $g;
-
-        if (0 > gmp_sign($g))
-            $g = self::gmp_twos_complement($g);
-
-        $m = gmp_mul($g, gmp_pow(self::gmp_2(), $shift));
-        $m = gmp_and($m, self::gmp_0xfs());
-        if (gmp_testbit($m, 63))
-            $m = gmp_neg(gmp_add(gmp_and(gmp_com($m), self::gmp_0xfs()),
-                self::gmp_1()));
-        return $m;
-    }
-
-    /**
-     * Arithmetic right shift
-     * @param resource|int|string $g
-     * @param int $shift number of bits to shift right
-     * @returns resource $g shifted right $shift bits
-     */
-    static function shift_right($g, $shift)
-    {
-        if (0 == $shift)
-            return $g;
-
-        if (0 <= gmp_sign($g))
-            $m = gmp_div($g, gmp_pow(self::gmp_2(), $shift));
-        else // negative
-        {
-            $g = gmp_and($g, self::gmp_0xfs());
-            $m = gmp_div($g, gmp_pow(self::gmp_2(), $shift));
-            $m = gmp_and($m, self::gmp_0xfs());
-            for ($i = 63; $i >= (63 - $shift); $i--)
-                gmp_setbit($m, $i);
-
-            $m = gmp_neg(gmp_add(gmp_and(gmp_com($m), self::gmp_0xfs()),
-                self::gmp_1()));
+        if (0 === $shift) {
+            return $gmp;
         }
 
-        return $m;
+        if (gmp_sign($gmp) < 0) {
+            $gmp = self::gmpTwosComplement($gmp);
+        }
+
+        $matches = gmp_mul($gmp, gmp_pow(self::gmp2(), $shift));
+        $matches = gmp_and($matches, self::gmp0xfs());
+        if (gmp_testbit($matches, 63)) {
+            $matches = gmp_neg(gmp_add(gmp_and(gmp_com($matches), self::gmp0xfs()), self::gmp1()));
+        }
+
+        return $matches;
     }
 
     /**
-     * @param int|str $n integer (or string representation of integer) to encode
+     * @param \GMP|resource|string $gmp
+     */
+    public static function shiftRight($gmp, int $shift): string
+    {
+        if (0 === $shift) {
+            return $gmp;
+        }
+
+        if (0 <= gmp_sign($gmp)) {
+            $matches = gmp_div($gmp, gmp_pow(self::gmp2(), $shift));
+        } else { // negative
+            $gmp = gmp_and($gmp, self::gmp0xfs());
+            $matches = gmp_div($gmp, gmp_pow(self::gmp2(), $shift));
+            $matches = gmp_and($matches, self::gmp0xfs());
+            for ($i = 63; $i >= (63 - $shift); --$i) {
+                gmp_setbit($matches, $i);
+            }
+
+            $matches = gmp_neg(gmp_add(gmp_and(gmp_com($matches), self::gmp0xfs()), self::gmp1()));
+        }
+
+        return $matches;
+    }
+
+    /**
+     * @param int|string $number integer (or string representation of integer) to encode
+     *
      * @return string $bytes of the long $n encoded per the Avro spec
      */
-    static function encode_long($n)
+    public static function encodeLong($number): string
     {
-        $g = gmp_init($n);
-        $g = gmp_xor(self::shift_left($g, 1),
-            self::shift_right($g, 63));
+        $gmp = gmp_init($number);
+        $gmp = gmp_xor(self::shiftLeft($gmp, 1), self::shiftRight($gmp, 63));
         $bytes = '';
-        while (0 != gmp_cmp(self::gmp_0(), gmp_and($g, self::gmp_n0x7f()))) {
-            $bytes .= chr(gmp_intval(gmp_and($g, self::gmp_0x7f())) | 0x80);
-            $g = self::shift_right($g, 7);
+        while (0 !== gmp_cmp(self::gmp0(), gmp_and($gmp, self::gmpN0x7f()))) {
+            $bytes .= chr(gmp_intval(gmp_and($gmp, self::gmp0x7f())) | 0x80);
+            $gmp = self::shiftRight($gmp, 7);
         }
-        $bytes .= chr(gmp_intval($g));
+        $bytes .= chr(gmp_intval($gmp));
+
         return $bytes;
     }
 
     /**
      * @param int[] $bytes array of ascii codes of bytes to decode
-     * @return string represenation of decoded long.
      */
-    static function decode_long_from_array($bytes)
+    public static function decodeLongFromArray(array $bytes): string
     {
-        $b = array_shift($bytes);
-        $g = gmp_init($b & 0x7f);
+        $byte = array_shift($bytes);
+        $gmp = gmp_init($byte & 0x7f);
         $shift = 7;
-        while (0 != ($b & 0x80)) {
-            $b = array_shift($bytes);
-            $g = gmp_or($g, self::shift_left(($b & 0x7f), $shift));
+        while (0 !== ($byte & 0x80)) {
+            $byte = array_shift($bytes);
+            $gmp = gmp_or($gmp, self::shiftLeft($byte & 0x7f, $shift));
             $shift += 7;
         }
-        $val = gmp_xor(self::shift_right($g, 1), gmp_neg(gmp_and($g, 1)));
-        return gmp_strval($val);
+        $value = gmp_xor(self::shiftRight($gmp, 1), gmp_neg(gmp_and($gmp, 1)));
+
+        return gmp_strval($value);
     }
 
+    /**
+     * Returns GMP resource for zero.
+     */
+    private static function gmp0(): \GMP
+    {
+        if (null === self::$gmp0) {
+            self::$gmp0 = gmp_init('0');
+        }
+
+        return self::$gmp0;
+    }
+
+    /**
+     * Returns GMP resource for one (1).
+     */
+    private static function gmp1(): \GMP
+    {
+        if (null === self::$gmp1) {
+            self::$gmp1 = gmp_init('1');
+        }
+
+        return self::$gmp1;
+    }
+
+    /**
+     * Returns GMP resource for two (2).
+     */
+    private static function gmp2(): \GMP
+    {
+        if (null === self::$gmp2) {
+            self::$gmp2 = gmp_init('2');
+        }
+
+        return self::$gmp2;
+    }
+
+    /**
+     * Returns GMP resource for 0x7f.
+     */
+    private static function gmp0x7f(): \GMP
+    {
+        if (null === self::$gmp0x7f) {
+            self::$gmp0x7f = gmp_init('0x7f');
+        }
+
+        return self::$gmp0x7f;
+    }
+
+    /**
+     * Returns GMP resource for 64-bit ~0x7f.
+     */
+    private static function gmpN0x7f(): \GMP
+    {
+        if (null === self::$gmpN0x7f) {
+            self::$gmpN0x7f = gmp_init('0xffffffffffffff80');
+        }
+
+        return self::$gmpN0x7f;
+    }
+
+    /**
+     * Returns GMP resource for 64-bits of 1.
+     */
+    private static function gmp0xfs(): \GMP
+    {
+        if (null === self::$gmp0xfs) {
+            self::$gmp0xfs = gmp_init('0xffffffffffffffff');
+        }
+
+        return self::$gmp0xfs;
+    }
 }

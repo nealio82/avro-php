@@ -1,4 +1,4 @@
-# nealio82/avro-php
+# Sparhandy/avro-php
 
 This is a package based on the [Apache AVRO PHP library](http://apache.mirror.anlx.net/avro/) (v 1.8.1).
 
@@ -9,7 +9,7 @@ The core logic remains the same but I've added Composer support, PSR-4 autoloadi
 ### Installation
 
 ```bash
-$ composer require nealio82/avro-php
+$ composer require sparhandy/avro-php
 ```
 
 ### Usage

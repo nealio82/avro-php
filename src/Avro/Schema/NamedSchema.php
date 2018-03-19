@@ -2,72 +2,52 @@
 
 namespace Avro\Schema;
 
-use Avro\Exception\SchemaParseException;
-
 /**
- * Parent class of named Avro schema
- * @package Avro
- * @todo Refactor NamedSchema to use an AvroName instance
- *       to store name information.
+ * Parent class of named Avro schema.
+ *
+ * @todo Refactor NamedSchema to use an Name instance to store name information.
  */
 class NamedSchema extends Schema
 {
-    /**
-     * @var Name $name
-     */
     private $name;
-
-    /**
-     * @var string documentation string
-     */
     private $doc;
 
-    /**
-     * @param string $type
-     * @param Name $name
-     * @param string $doc documentation string
-     * @param NamedSchemata &$schemata
-     * @throws SchemaParseException
-     */
-    public function __construct($type, Name $name, $doc = null, NamedSchemata &$schemata = null)
+    public function __construct(string $type, Name $name, ?string $doc = null, NamedSchemata &$schemata = null)
     {
         parent::__construct($type);
-        $this->name = $name;
 
-        if ($doc && !is_string($doc))
-            throw new SchemaParseException('Schema doc attribute must be a string');
+        $this->name = $name;
         $this->doc = $doc;
 
-        if (!is_null($schemata))
-            $schemata = $schemata->clone_with_new_schema($this);
+        if (null !== $schemata) {
+            $schemata = $schemata->cloneWithNewSchema($this);
+        }
     }
 
-    /**
-     * @returns mixed
-     */
-    public function to_avro()
+    public function getName(): Name
     {
-        $avro = parent::to_avro();
-        list($name, $namespace) = Name::extract_namespace($this->qualified_name());
-        $avro[Schema::NAME_ATTR] = $name;
-        if ($namespace)
+        return $this->name;
+    }
+
+    public function toAvro()
+    {
+        $avro = parent::toAvro();
+        $avro[Schema::NAME_ATTR] = Name::extractName($this->name->getQualifiedName());
+
+        $namespace = Name::extractNamespace($this->name->getQualifiedName());
+        if ($namespace) {
             $avro[Schema::NAMESPACE_ATTR] = $namespace;
-        if (!is_null($this->doc))
+        }
+
+        if (null !== $this->doc) {
             $avro[Schema::DOC_ATTR] = $this->doc;
+        }
+
         return $avro;
     }
 
-    /**
-     * @returns string
-     */
-    public function fullname()
+    protected function fullname(): string
     {
-        return $this->name->fullname();
+        return $this->name->getFullname();
     }
-
-    public function qualified_name()
-    {
-        return $this->name->qualified_name();
-    }
-
 }

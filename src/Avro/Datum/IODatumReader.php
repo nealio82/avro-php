@@ -8,415 +8,364 @@ use Avro\Schema\Schema;
 
 /**
  * Handles schema-specifc reading of data from the decoder.
- *
- * Also handles schema resolution between the reader and writer
- * schemas (if a writer's schema is provided).
- *
- * @package Avro
+ * Also handles schema resolution between the reader and writer schemas (if a writer's schema is provided).
  */
 class IODatumReader
 {
-    /**
-     *
-     * @param Schema $writers_schema
-     * @param Schema $readers_schema
-     * @returns boolean true if the schemas are consistent with
-     *                  each other and false otherwise.
-     */
-    static function schemas_match(Schema $writers_schema, Schema $readers_schema)
+    private $writersSchema;
+    private $readersSchema;
+
+    public function __construct(?Schema $writersSchema = null, ?Schema $readersSchema = null)
     {
-        $writers_schema_type = $writers_schema->type;
-        $readers_schema_type = $readers_schema->type;
+        $this->writersSchema = $writersSchema;
+        $this->readersSchema = $readersSchema;
+    }
 
-        if (Schema::UNION_SCHEMA == $writers_schema_type
-            || Schema::UNION_SCHEMA == $readers_schema_type
-        )
+    public static function schemasMatch(Schema $writersSchema, Schema $readersSchema): bool
+    {
+        $writersSchemaType = $writersSchema->type;
+        $readersSchemaType = $readersSchema->type;
+
+        if (Schema::UNION_SCHEMA === $writersSchemaType || Schema::UNION_SCHEMA === $readersSchemaType) {
             return true;
-
-        if ($writers_schema_type == $readers_schema_type) {
-            if (Schema::is_primitive_type($writers_schema_type))
-                return true;
-
-            switch ($readers_schema_type) {
-                case Schema::MAP_SCHEMA:
-                    return self::attributes_match($writers_schema->values(),
-                        $readers_schema->values(),
-                        array(Schema::TYPE_ATTR));
-                case Schema::ARRAY_SCHEMA:
-                    return self::attributes_match($writers_schema->items(),
-                        $readers_schema->items(),
-                        array(Schema::TYPE_ATTR));
-                case Schema::ENUM_SCHEMA:
-                    return self::attributes_match($writers_schema, $readers_schema,
-                        array(Schema::FULLNAME_ATTR));
-                case Schema::FIXED_SCHEMA:
-                    return self::attributes_match($writers_schema, $readers_schema,
-                        array(Schema::FULLNAME_ATTR,
-                            Schema::SIZE_ATTR));
-                case Schema::RECORD_SCHEMA:
-                case Schema::ERROR_SCHEMA:
-                    return self::attributes_match($writers_schema, $readers_schema,
-                        array(Schema::FULLNAME_ATTR));
-                case Schema::REQUEST_SCHEMA:
-                    // XXX: This seems wrong
-                    return true;
-                // XXX: no default
-            }
-
-            if (Schema::INT_TYPE == $writers_schema_type
-                && in_array($readers_schema_type, array(Schema::LONG_TYPE,
-                    Schema::FLOAT_TYPE,
-                    Schema::DOUBLE_TYPE))
-            )
-                return true;
-
-            if (Schema::LONG_TYPE == $writers_schema_type
-                && in_array($readers_schema_type, array(Schema::FLOAT_TYPE,
-                    Schema::DOUBLE_TYPE))
-            )
-                return true;
-
-            if (Schema::FLOAT_TYPE == $writers_schema_type
-                && Schema::DOUBLE_TYPE == $readers_schema_type
-            )
-                return true;
-
-            return false;
         }
 
+        if ($writersSchemaType === $readersSchemaType) {
+            if (Schema::isPrimitiveType($writersSchemaType)) {
+                return true;
+            }
+
+            switch ($readersSchemaType) {
+                case Schema::MAP_SCHEMA:
+                    return self::attributesMatch(
+                        $writersSchema->values(),
+                        $readersSchema->values(),
+                        [Schema::TYPE_ATTR]
+                    );
+                case Schema::ARRAY_SCHEMA:
+                    return self::attributesMatch(
+                        $writersSchema->items(),
+                        $readersSchema->items(),
+                        [Schema::TYPE_ATTR]
+                    );
+                case Schema::ENUM_SCHEMA:
+                    return self::attributesMatch($writersSchema, $readersSchema, [Schema::FULLNAME_ATTR]);
+                case Schema::FIXED_SCHEMA:
+                    return self::attributesMatch(
+                        $writersSchema,
+                        $readersSchema,
+                        [Schema::FULLNAME_ATTR, Schema::SIZE_ATTR]
+                    );
+                case Schema::RECORD_SCHEMA:
+                case Schema::ERROR_SCHEMA:
+                    return self::attributesMatch($writersSchema, $readersSchema, [Schema::FULLNAME_ATTR]);
+                case Schema::REQUEST_SCHEMA:
+                    // @todo: This seems wrong
+                    return true;
+                // @todo: no default
+            }
+
+            if (Schema::INT_TYPE === $writersSchemaType
+                && in_array($readersSchemaType, [Schema::LONG_TYPE, Schema::FLOAT_TYPE, Schema::DOUBLE_TYPE], true)
+            ) {
+                return true;
+            }
+
+            if (Schema::LONG_TYPE === $writersSchemaType
+                && in_array($readersSchemaType, [Schema::FLOAT_TYPE, Schema::DOUBLE_TYPE], true)
+            ) {
+                return true;
+            }
+
+            if (Schema::FLOAT_TYPE === $writersSchemaType && Schema::DOUBLE_TYPE === $readersSchemaType) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
      * Checks equivalence of the given attributes of the two given schemas.
      *
-     * @param Schema $schema_one
-     * @param Schema $schema_two
-     * @param string[] $attribute_names array of string attribute names to compare
-     *
-     * @returns boolean true if the attributes match and false otherwise.
+     * @param string[] $attributeNames
      */
-    static function attributes_match(Schema $schema_one, Schema $schema_two, $attribute_names)
+    public static function attributesMatch(Schema $schemaOne, Schema $schemaTwo, array $attributeNames): bool
     {
-        foreach ($attribute_names as $attribute_name)
-            if ($schema_one->attribute($attribute_name)
-                != $schema_two->attribute($attribute_name)
-            )
+        foreach ($attributeNames as $attribute_name) {
+            if ($schemaOne->attribute($attribute_name) !== $schemaTwo->attribute($attribute_name)) {
                 return false;
+            }
+        }
+
         return true;
     }
 
-    /**
-     * @var Schema
-     */
-    private $writers_schema;
-
-    /**
-     * @var Schema
-     */
-    private $readers_schema;
-
-    /**
-     * @param Schema $writers_schema
-     * @param Schema $readers_schema
-     */
-    function __construct(Schema $writers_schema = null, Schema $readers_schema = null)
+    public function setWritersSchema(Schema $readersSchema): void
     {
-        $this->writers_schema = $writers_schema;
-        $this->readers_schema = $readers_schema;
+        $this->writersSchema = $readersSchema;
     }
 
-    /**
-     * @param Schema $readers_schema
-     */
-    public function set_writers_schema(Schema $readers_schema)
-    {
-        $this->writers_schema = $readers_schema;
-    }
-
-    /**
-     * @param IOBinaryDecoder $decoder
-     * @returns string
-     */
     public function read(IOBinaryDecoder $decoder)
     {
-        if (is_null($this->readers_schema))
-            $this->readers_schema = $this->writers_schema;
-        return $this->read_data($this->writers_schema, $this->readers_schema,
-            $decoder);
-    }
-
-    /**#@+
-     * @param Schema $writers_schema
-     * @param Schema $readers_schema
-     * @param IOBinaryDecoder $decoder
-     */
-    /**
-     * @returns mixed
-     */
-    public function read_data(Schema $writers_schema, Schema $readers_schema, IOBinaryDecoder $decoder)
-    {
-        if (!self::schemas_match($writers_schema, $readers_schema))
-            throw new IOSchemaMatchException($writers_schema, $readers_schema);
-
-        // Schema resolution: reader's schema is a union, writer's schema is not
-        if (Schema::UNION_SCHEMA == $readers_schema->type()
-            && Schema::UNION_SCHEMA != $writers_schema->type()
-        ) {
-            foreach ($readers_schema->schemas() as $schema)
-                if (self::schemas_match($writers_schema, $schema))
-                    return $this->read_data($writers_schema, $schema, $decoder);
-            throw new IOSchemaMatchException($writers_schema, $readers_schema);
+        if (null === $this->readersSchema) {
+            $this->readersSchema = $this->writersSchema;
         }
 
-        switch ($writers_schema->type()) {
+        return $this->readData($this->writersSchema, $this->readersSchema, $decoder);
+    }
+
+    public function readData(Schema $writersSchema, Schema $readersSchema, IOBinaryDecoder $decoder)
+    {
+        if (!self::schemasMatch($writersSchema, $readersSchema)) {
+            throw new IOSchemaMatchException($writersSchema, $readersSchema);
+        }
+        // Schema resolution: reader's schema is a union, writer's schema is not
+        if (Schema::UNION_SCHEMA === $readersSchema->type() && Schema::UNION_SCHEMA !== $writersSchema->type()) {
+            foreach ($readersSchema->schemas() as $schema) {
+                if (self::schemasMatch($writersSchema, $schema)) {
+                    return $this->readData($writersSchema, $schema, $decoder);
+                }
+            }
+
+            throw new IOSchemaMatchException($writersSchema, $readersSchema);
+        }
+
+        switch ($writersSchema->type()) {
             case Schema::NULL_TYPE:
-                return $decoder->read_null();
+                return $decoder->readNull();
             case Schema::BOOLEAN_TYPE:
-                return $decoder->read_boolean();
+                return $decoder->readBoolean();
             case Schema::INT_TYPE:
-                return $decoder->read_int();
+                return $decoder->readInt();
             case Schema::LONG_TYPE:
-                return $decoder->read_long();
+                return $decoder->readLong();
             case Schema::FLOAT_TYPE:
-                return $decoder->read_float();
+                return $decoder->readFloat();
             case Schema::DOUBLE_TYPE:
-                return $decoder->read_double();
+                return $decoder->readDouble();
             case Schema::STRING_TYPE:
-                return $decoder->read_string();
+                return $decoder->readString();
             case Schema::BYTES_TYPE:
-                return $decoder->read_bytes();
+                return $decoder->readBytes();
             case Schema::ARRAY_SCHEMA:
-                return $this->read_array($writers_schema, $readers_schema, $decoder);
+                return $this->readArray($writersSchema, $readersSchema, $decoder);
             case Schema::MAP_SCHEMA:
-                return $this->read_map($writers_schema, $readers_schema, $decoder);
+                return $this->readMap($writersSchema, $readersSchema, $decoder);
             case Schema::UNION_SCHEMA:
-                return $this->read_union($writers_schema, $readers_schema, $decoder);
+                return $this->readUnion($writersSchema, $readersSchema, $decoder);
             case Schema::ENUM_SCHEMA:
-                return $this->read_enum($writers_schema, $readers_schema, $decoder);
+                return $this->readEnum($writersSchema, $readersSchema, $decoder);
             case Schema::FIXED_SCHEMA:
-                return $this->read_fixed($writers_schema, $readers_schema, $decoder);
+                return $this->readFixed($writersSchema, $readersSchema, $decoder);
             case Schema::RECORD_SCHEMA:
             case Schema::ERROR_SCHEMA:
             case Schema::REQUEST_SCHEMA:
-                return $this->read_record($writers_schema, $readers_schema, $decoder);
+                return $this->readRecord($writersSchema, $readersSchema, $decoder);
             default:
-                throw new Exception(sprintf("Cannot read unknown schema type: %s",
-                    $writers_schema->type()));
+                throw new Exception(sprintf('Cannot read unknown schema type: %s', $writersSchema->type()));
         }
     }
 
-    /**
-     * @returns array
-     */
-    public function read_array(Schema $writers_schema, Schema $readers_schema, IOBinaryDecoder $decoder)
+    public function readArray(Schema $writersSchema, Schema $readersSchema, IOBinaryDecoder $decoder): array
     {
-        $items = array();
-        $block_count = $decoder->read_long();
-        while (0 != $block_count) {
-            if ($block_count < 0) {
-                $block_count = -$block_count;
-                $block_size = $decoder->read_long(); // Read (and ignore) block size
+        $items = [];
+        $blockCount = $decoder->readLong();
+        while (0 !== $blockCount) {
+            if ($blockCount < 0) {
+                $blockCount = -$blockCount;
+                $blockSize = $decoder->readLong(); // Read (and ignore) block size
             }
-            for ($i = 0; $i < $block_count; $i++)
-                $items [] = $this->read_data($writers_schema->items(),
-                    $readers_schema->items(),
-                    $decoder);
-            $block_count = $decoder->read_long();
+            for ($i = 0; $i < $blockCount; ++$i) {
+                $items[] = $this->readData($writersSchema->items(), $readersSchema->items(), $decoder);
+            }
+            $blockCount = $decoder->readLong();
         }
+
         return $items;
     }
 
-    /**
-     * @returns array
-     */
-    public function read_map(Schema $writers_schema, Schema $readers_schema, IOBinaryDecoder $decoder)
+    public function readMap(Schema $writersSchema, Schema $readersSchema, IOBinaryDecoder $decoder): array
     {
-        $items = array();
-        $pair_count = $decoder->read_long();
-        while (0 != $pair_count) {
-            if ($pair_count < 0) {
-                $pair_count = -$pair_count;
-                // Note: we're not doing anything with block_size other than skipping it
-                $block_size = $decoder->read_long();
+        $items = [];
+        $pairCount = $decoder->readLong();
+        while (0 !== $pairCount) {
+            if ($pairCount < 0) {
+                $pairCount = -$pairCount;
+                $blockSize = $decoder->readLong(); // Read (and ignore) block size
             }
 
-            for ($i = 0; $i < $pair_count; $i++) {
-                $key = $decoder->read_string();
+            for ($i = 0; $i < $pairCount; ++$i) {
+                $key = $decoder->readString();
 
-                $items[$key] = $this->read_data($writers_schema->values(),
-                    $readers_schema->values(),
-                    $decoder);
+                $items[$key] = $this->readData($writersSchema->values(), $readersSchema->values(), $decoder);
             }
-            $pair_count = $decoder->read_long();
+            $pairCount = $decoder->readLong();
         }
+
         return $items;
     }
 
-    /**
-     * @returns mixed
-     */
-    public function read_union(Schema $writers_schema, Schema $readers_schema, IOBinaryDecoder $decoder)
+    public function readUnion(Schema $writersSchema, Schema $readersSchema, IOBinaryDecoder $decoder)
     {
-        $schema_index = $decoder->read_long();
+        $selectedWritersSchema = $writersSchema->schemaByIndex($decoder->readLong());
 
-        $selected_writers_schema = $writers_schema->schema_by_index($schema_index);
-        return $this->read_data($selected_writers_schema, $readers_schema, $decoder);
+        return $this->readData($selectedWritersSchema, $readersSchema, $decoder);
     }
 
-    /**
-     * @returns string
-     */
-    public function read_enum(Schema $writers_schema, Schema $readers_schema, IOBinaryDecoder $decoder)
+    public function readEnum(Schema $writersSchema, Schema $readersSchema, IOBinaryDecoder $decoder)
     {
-        $symbol_index = $decoder->read_int();
-        $symbol = $writers_schema->symbol_by_index($symbol_index);
-        if (!$readers_schema->has_symbol($symbol))
-            null; // FIXME: unset wrt schema resolution
+        $symbolIndex = $decoder->readInt();
+        $symbol = $writersSchema->symbolByIndex($symbolIndex);
+
+        if (!$readersSchema->hasSymbol($symbol)) {
+            null;
+        } // @todo: unset write schema resolution
+
         return $symbol;
     }
 
-    /**
-     * @returns string
-     */
-    public function read_fixed(Schema $writers_schema, Schema $readers_schema, IOBinaryDecoder $decoder)
+    public function readFixed(Schema $writersSchema, Schema $readersSchema, IOBinaryDecoder $decoder): string
     {
-        return $decoder->read($writers_schema->size());
+        return $decoder->read($writersSchema->size());
     }
 
-    /**
-     * @returns array
-     */
-    public function read_record(Schema $writers_schema, Schema $readers_schema, IOBinaryDecoder $decoder)
+    public function readRecord(Schema $writersSchema, Schema $readersSchema, IOBinaryDecoder $decoder): array
     {
-        $readers_fields = $readers_schema->fields_hash();
-        $record = array();
-        foreach ($writers_schema->fields() as $writers_field) {
-            $type = $writers_field->type();
-            if (isset($readers_fields[$writers_field->name()]))
-                $record[$writers_field->name()]
-                    = $this->read_data($type,
-                    $readers_fields[$writers_field->name()]->type(),
-                    $decoder);
-            else
-                $this->skip_data($type, $decoder);
+        $readersFields = $readersSchema->fieldsHash();
+        $record = [];
+        foreach ($writersSchema->fields() as $writersField) {
+            $type = $writersField->type();
+            if (isset($readersFields[$writersField->name()])) {
+                $record[$writersField->name()] = $this->readData(
+                    $type,
+                    $readersFields[$writersField->name()]->type(),
+                    $decoder
+                );
+            } else {
+                $this->skipData($type, $decoder);
+            }
         }
+
         // Fill in default values
-        if (count($readers_fields) > count($record)) {
-            $writers_fields = $writers_schema->fields_hash();
-            foreach ($readers_fields as $field_name => $field) {
-                if (!isset($writers_fields[$field_name])) {
-                    if ($field->has_default_value())
-                        $record[$field->name()]
-                            = $this->read_default_value($field->type(),
-                            $field->default_value());
-                    else
-                        null; // FIXME: unset
+        if (count($readersFields) > count($record)) {
+            $writers_fields = $writersSchema->fieldsHash();
+            foreach ($readersFields as $fieldName => $field) {
+                if (!isset($writers_fields[$fieldName])) {
+                    if ($field->hasDefaultValue()) {
+                        $record[$field->name()] = $this->readDefaultValue($field->type(), $field->defaultValue());
+                    } else {
+                        null;
+                    } // @todo: unset
                 }
             }
         }
 
         return $record;
     }
-    /**#@-*/
 
-    /**
-     * @param Schema $field_schema
-     * @param null|boolean|int|float|string|array $default_value
-     * @returns null|boolean|int|float|string|array
-     *
-     * @throws Exception if $field_schema type is unknown.
-     */
-    public function read_default_value(Schema $field_schema, $default_value)
+    public function readDefaultValue(Schema $fieldSchema, $defaultValue)
     {
-        switch ($field_schema->type()) {
+        switch ($fieldSchema->type()) {
             case Schema::NULL_TYPE:
                 return null;
             case Schema::BOOLEAN_TYPE:
-                return $default_value;
+                return $defaultValue;
             case Schema::INT_TYPE:
             case Schema::LONG_TYPE:
-                return (int)$default_value;
+                return (int) $defaultValue;
             case Schema::FLOAT_TYPE:
             case Schema::DOUBLE_TYPE:
-                return (float)$default_value;
+                return (float) $defaultValue;
             case Schema::STRING_TYPE:
             case Schema::BYTES_TYPE:
-                return $default_value;
+                return $defaultValue;
             case Schema::ARRAY_SCHEMA:
-                $array = array();
-                foreach ($default_value as $json_val) {
-                    $val = $this->read_default_value($field_schema->items(), $json_val);
-                    $array [] = $val;
+                $array = [];
+                foreach ($defaultValue as $jsonValue) {
+                    $val = $this->readDefaultValue($fieldSchema->items(), $jsonValue);
+                    $array[] = $val;
                 }
+
                 return $array;
             case Schema::MAP_SCHEMA:
-                $map = array();
-                foreach ($default_value as $key => $json_val)
-                    $map[$key] = $this->read_default_value($field_schema->values(),
-                        $json_val);
+                $map = [];
+                foreach ($defaultValue as $key => $jsonValue) {
+                    $map[$key] = $this->readDefaultValue($fieldSchema->values(), $jsonValue);
+                }
+
                 return $map;
             case Schema::UNION_SCHEMA:
-                return $this->read_default_value($field_schema->schema_by_index(0),
-                    $default_value);
+                return $this->readDefaultValue($fieldSchema->schemaByIndex(0), $defaultValue);
             case Schema::ENUM_SCHEMA:
             case Schema::FIXED_SCHEMA:
-                return $default_value;
+                return $defaultValue;
             case Schema::RECORD_SCHEMA:
-                $record = array();
-                foreach ($field_schema->fields() as $field) {
-                    $field_name = $field->name();
-                    if (!$json_val = $default_value[$field_name])
-                        $json_val = $field->default_value();
+                $record = [];
+                foreach ($fieldSchema->fields() as $field) {
+                    $fieldName = $field->name();
+                    if (!$jsonValue = $defaultValue[$fieldName]) {
+                        $jsonValue = $field->defaultValue();
+                    }
 
-                    $record[$field_name] = $this->read_default_value($field->type(),
-                        $json_val);
+                    $record[$fieldName] = $this->readDefaultValue($field->type(), $jsonValue);
                 }
+
                 return $record;
             default:
-                throw new Exception(sprintf('Unknown type: %s', $field_schema->type()));
+                throw new Exception(sprintf('Unknown type: %s', $fieldSchema->type()));
         }
     }
 
-    /**
-     * @param Schema $writers_schema
-     * @param IOBinaryDecoder $decoder
-     */
-    private function skip_data(Schema $writers_schema, IOBinaryDecoder $decoder)
+    private function skipData(Schema $writersSchema, IOBinaryDecoder $decoder): void
     {
-        switch ($writers_schema->type()) {
+        switch ($writersSchema->type()) {
             case Schema::NULL_TYPE:
-                return $decoder->skip_null();
+                $decoder->skipNull();
+                break;
             case Schema::BOOLEAN_TYPE:
-                return $decoder->skip_boolean();
+                $decoder->skipBoolean();
+                break;
             case Schema::INT_TYPE:
-                return $decoder->skip_int();
+                $decoder->skipInt();
+                break;
             case Schema::LONG_TYPE:
-                return $decoder->skip_long();
+                $decoder->skipLong();
+                break;
             case Schema::FLOAT_TYPE:
-                return $decoder->skip_float();
+                $decoder->skipFloat();
+                break;
             case Schema::DOUBLE_TYPE:
-                return $decoder->skip_double();
+                $decoder->skipDouble();
+                break;
             case Schema::STRING_TYPE:
-                return $decoder->skip_string();
+                $decoder->skipString();
+                break;
             case Schema::BYTES_TYPE:
-                return $decoder->skip_bytes();
+                $decoder->skipBytes();
+                break;
             case Schema::ARRAY_SCHEMA:
-                return $decoder->skip_array($writers_schema, $decoder);
+                $decoder->skipArray($writersSchema, $decoder);
+                break;
             case Schema::MAP_SCHEMA:
-                return $decoder->skip_map($writers_schema, $decoder);
+                $decoder->skipMap($writersSchema, $decoder);
+                break;
             case Schema::UNION_SCHEMA:
-                return $decoder->skip_union($writers_schema, $decoder);
+                $decoder->skipUnion($writersSchema, $decoder);
+                break;
             case Schema::ENUM_SCHEMA:
-                return $decoder->skip_enum($writers_schema, $decoder);
+                $decoder->skipEnum($writersSchema, $decoder);
+                break;
             case Schema::FIXED_SCHEMA:
-                return $decoder->skip_fixed($writers_schema, $decoder);
+                $decoder->skipFixed($writersSchema, $decoder);
+                break;
             case Schema::RECORD_SCHEMA:
             case Schema::ERROR_SCHEMA:
             case Schema::REQUEST_SCHEMA:
-                return $decoder->skip_record($writers_schema, $decoder);
+                $decoder->skipRecord($writersSchema, $decoder);
+                break;
             default:
-                throw new Exception(sprintf('Uknown schema type: %s',
-                    $writers_schema->type()));
+                throw new Exception(sprintf('Uknown schema type: %s', $writersSchema->type()));
         }
     }
 }

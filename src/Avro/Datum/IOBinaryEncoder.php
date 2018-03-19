@@ -7,89 +7,73 @@ use Avro\GMP\GMP;
 use Avro\IO\IO;
 
 /**
- * Encodes and writes Avro data to an IO object using
- * Avro binary encoding.
- *
- * @package Avro
+ * Encodes and writes Avro data to an IO object using Avro binary encoding.
  */
 class IOBinaryEncoder
 {
-    /**
-     * Performs encoding of the given float value to a binary string
-     *
-     * XXX: This is <b>not</b> endian-aware! The {@link Avro::check_platform()}
-     * called in {@link IOBinaryEncoder::__construct()} should ensure the
-     * library is only used on little-endian platforms, which ensure the little-endian
-     * encoding required by the Avro spec.
-     *
-     * @param float $float
-     * @returns string bytes
-     * @see Avro::check_platform()
-     */
-    static function float_to_int_bits($float)
-    {
-        return pack('f', (float)$float);
-    }
-
-    /**
-     * Performs encoding of the given double value to a binary string
-     *
-     * XXX: This is <b>not</b> endian-aware! See comments in
-     * {@link IOBinaryEncoder::float_to_int_bits()} for details.
-     *
-     * @param double $double
-     * @returns string bytes
-     */
-    static function double_to_long_bits($double)
-    {
-        return pack('d', (double)$double);
-    }
-
-    /**
-     * @param int|string $n
-     * @returns string long $n encoded as bytes
-     * @internal This relies on 64-bit PHP.
-     */
-    static public function encode_long($n)
-    {
-        $n = (int)$n;
-        $n = ($n << 1) ^ ($n >> 63);
-        $str = '';
-        while (0 != ($n & ~0x7F)) {
-            $str .= chr(($n & 0x7F) | 0x80);
-            $n >>= 7;
-        }
-        $str .= chr($n);
-        return $str;
-    }
-
-    /**
-     * @var IO
-     */
     private $io;
 
     /**
-     * @param IO $io object to which data is to be written.
-     *
+     * @param IO $io object to which data is to be written
      */
-    function __construct(IO $io)
+    public function __construct(IO $io)
     {
-        Avro::check_platform();
+        Avro::checkPlatform();
         $this->io = $io;
+    }
+
+    /**
+     * Performs encoding of the given float value to a binary string.
+     *
+     * This is <b>not</b> endian-aware! The {@link Avro::checkPlatform()} called in
+     * {@link IOBinaryEncoder::__construct()} should ensure the library is only used on little-endian platforms,
+     * which ensure the little-endian encoding required by the Avro spec.
+     */
+    public static function floatToIntBits(float $float): string
+    {
+        return pack('f', $float);
+    }
+
+    /**
+     * Performs encoding of the given double value to a binary string.
+     *
+     * This is <b>not</b> endian-aware! See comments in {@link IOBinaryEncoder::floatToIntBits()} for details.
+     */
+    public static function doubleToLongBits(float $double): string
+    {
+        return pack('d', $double);
+    }
+
+    /**
+     * @internal this relies on 64-bit PHP
+     *
+     * @param int|string $number
+     */
+    public static function encodeLong($number): string
+    {
+        $number = (int) $number;
+        $number = ($number << 1) ^ ($number >> 63);
+        $string = '';
+        while (0 !== ($number & ~0x7F)) {
+            $string .= chr(($number & 0x7F) | 0x80);
+            $number >>= 7;
+        }
+        $string .= chr($number);
+
+        return $string;
     }
 
     /**
      * @param null $datum actual value is ignored
      */
-    function write_null($datum)
+    public function writeNull($datum): void
     {
-        return null;
     }
 
     /**
-     * @param boolean $datum
+     * @param bool $datum
      */
-    function write_boolean($datum)
+    public function writeBoolean($datum): void
     {
         $byte = $datum ? chr(1) : chr(0);
         $this->write($byte);
@@ -98,62 +82,60 @@ class IOBinaryEncoder
     /**
      * @param int $datum
      */
-    function write_int($datum)
+    public function writeInt($datum): void
     {
-        $this->write_long($datum);
+        $this->writeLong($datum);
     }
 
     /**
-     * @param int $n
+     * @param int $number
      */
-    function write_long($n)
+    public function writeLong($number): void
     {
-        if (Avro::uses_gmp())
-            $this->write(GMP::encode_long($n));
-        else
-            $this->write(self::encode_long($n));
-    }
-
-    /**
-     * @param float $datum
-     * @uses self::float_to_int_bits()
-     */
-    public function write_float($datum)
-    {
-        $this->write(self::float_to_int_bits($datum));
+        if (Avro::usesGmp()) {
+            $this->write(GMP::encodeLong($number));
+        } else {
+            $this->write(self::encodeLong($number));
+        }
     }
 
     /**
      * @param float $datum
-     * @uses self::double_to_long_bits()
      */
-    public function write_double($datum)
+    public function writeFloat($datum): void
     {
-        $this->write(self::double_to_long_bits($datum));
+        $this->write(self::floatToIntBits($datum));
     }
 
     /**
-     * @param string $str
-     * @uses self::write_bytes()
+     * @param float $datum
      */
-    function write_string($str)
+    public function writeDouble($datum): void
     {
-        $this->write_bytes($str);
+        $this->write(self::doubleToLongBits($datum));
+    }
+
+    /**
+     * @param string $string
+     */
+    public function writeString($string): void
+    {
+        $this->writeBytes($string);
     }
 
     /**
      * @param string $bytes
      */
-    function write_bytes($bytes)
+    public function writeBytes($bytes): void
     {
-        $this->write_long(strlen($bytes));
+        $this->writeLong(strlen($bytes));
         $this->write($bytes);
     }
 
     /**
      * @param string $datum
      */
-    function write($datum)
+    public function write($datum): void
     {
         $this->io->write($datum);
     }

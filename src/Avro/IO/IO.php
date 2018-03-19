@@ -2,115 +2,54 @@
 
 namespace Avro\IO;
 
-use Avro\Exception\NotImplementedException;
-
 /**
- * Barebones IO base class to provide common interface for file and string
- * access within the Avro classes.
- *
- * @package Avro
+ * Barebones IO base class to provide common interface for file and string access within the Avro classes.
  */
-class IO
+interface IO
 {
+    public const READ_MODE = 'r';
+    public const WRITE_MODE = 'w';
+
+    // Set position equal to offset bytes
+    public const SEEK_CUR = SEEK_CUR;
+    // Set position to current index + offset bytes
+    public const SEEK_SET = SEEK_SET;
+    // Set position to end of file + offset bytes
+    public const SEEK_END = SEEK_END;
 
     /**
-     * @var string general read mode
+     * Read $length bytes from IO instance.
      */
-    const READ_MODE = 'r';
-    /**
-     * @var string general write mode.
-     */
-    const WRITE_MODE = 'w';
+    public function read(int $length): string;
 
     /**
-     * @var int set position equal to $offset bytes
+     * Append $argument bytes to this buffer and returns the count of bytes written.
      */
-    const SEEK_CUR = SEEK_CUR;
-    /**
-     * @var int set position to current index + $offset bytes
-     */
-    const SEEK_SET = SEEK_SET;
-    /**
-     * @var int set position to end of file + $offset bytes
-     */
-    const SEEK_END = SEEK_END;
+    public function write(string $string): int;
 
     /**
-     * Read $len bytes from IO instance
-     * @var int $len
-     * @return string bytes read
+     * Return byte offset within IO instance.
      */
-    public function read($len)
-    {
-        throw new NotImplementedException('Not implemented');
-    }
+    public function tell(): int;
 
     /**
-     * Append bytes to this buffer. (Nothing more is needed to support Avro.)
-     * @param str $arg bytes to write
-     * @returns int count of bytes written.
-     * @throws IOException if $args is not a string value.
+     * Set the position indicator. The new position, measured in bytes from the beginning of the file,
+     * is obtained by adding $offset to the position specified by $whence.
      */
-    public function write($arg)
-    {
-        throw new NotImplementedException('Not implemented');
-    }
-
-    /**
-     * Return byte offset within IO instance
-     * @return int
-     */
-    public function tell()
-    {
-        throw new NotImplementedException('Not implemented');
-    }
-
-    /**
-     * Set the position indicator. The new position, measured in bytes
-     * from the beginning of the file, is obtained by adding $offset to
-     * the position specified by $whence.
-     *
-     * @param int $offset
-     * @param int $whence one of AvroIO::SEEK_SET, AvroIO::SEEK_CUR,
-     *                    or Avro::SEEK_END
-     * @returns boolean true
-     *
-     * @throws IOException
-     */
-    public function seek($offset, $whence=self::SEEK_SET)
-    {
-        throw new NotImplementedException('Not implemented');
-    }
+    public function seek(int $offset, int $whence = self::SEEK_SET): bool;
 
     /**
      * Flushes any buffered data to the IO object.
-     * @returns boolean true upon success.
      */
-    public function flush()
-    {
-        throw new NotImplementedException('Not implemented');
-    }
+    public function flush(): bool;
 
     /**
-     * Returns whether or not the current position at the end of this IO
-     * instance.
-     *
-     * Note is_eof() is <b>not</b> like eof in C or feof in PHP:
-     * it returns TRUE if the *next* read would be end of file,
-     * rather than if the *most recent* read read end of file.
-     * @returns boolean true if at the end of file, and false otherwise
+     * Returns whether or not the current position at the end of this IO instance.
      */
-    public function is_eof()
-    {
-        throw new NotImplementedException('Not implemented');
-    }
+    public function isEof(): bool;
 
     /**
      * Closes this IO instance.
      */
-    public function close()
-    {
-        throw new NotImplementedException('Not implemented');
-    }
-
+    public function close(): bool;
 }
