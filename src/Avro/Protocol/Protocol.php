@@ -40,7 +40,7 @@ class Protocol
         if (!is_null($avro["messages"])) {
             foreach ($avro["messages"] as $messageName => $messageAvro) {
                 $message = new ProtocolMessage($messageName, $messageAvro, $this);
-                $this->messages{$messageName} = $message;
+                $this->messages[$messageName] = $message;
             }
         }
     }
